@@ -1,0 +1,3579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>れじぇんど袴在庫管理</title>
+<style>
+  :root{
+    --bg:#f7f3ee; --card:#fffaf4; --ink:#2b241f; --muted:#83746a;
+    --line:#eadfd3; --main:#8b5e3c; --main2:#b9895e;
+    --danger:#b94a48; --ok:#3f7d58; --shadow:0 10px 25px rgba(54,36,20,.08);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,#fbf7f1,#f1e8dd);
+    color:var(--ink);
+    padding-bottom:88px;
+  }
+  header{
+    position: relative; top:auto; 
+    background:rgba(247,243,238,.92);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+    padding:14px 14px 10px;
+  }
+  h1{margin:0;font-size:20px;letter-spacing:.04em}
+  .sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}
+  .tab{
+    border:1px solid var(--line); background:#fff; color:var(--muted);
+    border-radius:999px; padding:10px 4px; font-weight:700; font-size:12px;
+  }
+  .tab.active{background:var(--main);color:white;border-color:var(--main)}
+  main{padding:14px;max-width:760px;margin:auto}
+  section{display:none}
+  section.active{display:block}
+  .card{
+    background:var(--card); border:1px solid var(--line);
+    border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:14px; margin-bottom:14px;
+  }
+  .title{font-size:16px;font-weight:800;margin:0 0 10px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px;font-weight:700}
+  input,select,textarea{
+    width:100%; border:1px solid var(--line); border-radius:14px;
+    background:white; padding:13px; font-size:16px; color:var(--ink); outline:none;
+  }
+  textarea{min-height:88px;resize:vertical}
+  input:focus,select:focus,textarea:focus{border-color:var(--main2);box-shadow:0 0 0 3px rgba(185,137,94,.18)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{border:0;border-radius:14px;padding:13px 14px;font-size:15px;font-weight:800;cursor:pointer}
+  .btn-main{background:var(--main);color:white}
+  .btn-sub{background:#efe4d8;color:var(--ink)}
+  .btn-danger{background:#f3dfdd;color:var(--danger)}
+  .btn-ok{background:#e0efe5;color:var(--ok)}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .pill{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:5px 9px; border-radius:999px; font-size:11px;
+    font-weight:800; margin:3px 3px 0 0;
+    border:1px solid rgba(0,0,0,.06); background:#f2e8dc; color:#6a4a31;
+  }
+  .item{
+    background:#fff; border:1px solid var(--line);
+    border-radius:16px; padding:12px; margin:10px 0;
+  }
+  .item h3{margin:0 0 3px;font-size:16px}
+  .meta{font-size:12px;color:var(--muted);line-height:1.65}
+  .miniActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}
+  .miniActions button{font-size:12px;padding:10px 6px}
+  .notice{
+    border-radius:14px; padding:11px; font-size:13px; line-height:1.5;
+    background:#fff7df; color:#7b5517; border:1px solid #f0dba1; margin-top:10px;
+  }
+  .bad{background:#fde7e4;border-color:#f1b8b2;color:#8a302b}
+  .good{background:#e8f5eb;border-color:#b8dfc2;color:#27643e}
+  .checkGroup{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:8px;
+  }
+  .checkItem{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:white;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:4px;
+    font-size:13px;
+    font-weight:800;
+    color:var(--ink);
+  }
+  .checkItem input{
+    width:20px;
+    height:20px;
+    padding:0;
+    accent-color:var(--main);
+  }
+  .countBox{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .count{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+  .count b{display:block;font-size:20px}
+  .count span{font-size:11px;color:var(--muted);font-weight:700}
+  .empty{text-align:center;color:var(--muted);padding:20px 8px;font-size:13px}
+  .editMode{border-color:#d5a061!important;box-shadow:0 0 0 3px rgba(213,160,97,.18)!important}
+  .bottomBar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:rgba(255,250,244,.94); backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    
+  }
+  .bottomInner{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){
+    .grid2{grid-template-columns:1fr}
+  }
+
+body{background:#f6f7f8!important;}
+header{background:rgba(246,247,248,.94)!important;}
+.card{
+  background:#fff!important;
+  border-radius:16px!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.06)!important;
+}
+.tab.active,.btn-main{background:#333!important;}
+input,select,textarea{border-radius:12px!important;}
+.item{border-radius:14px!important;box-shadow:none!important;}
+.pill{background:#eef0f2!important;color:#333!important;}
+:root{--main:#333!important;--main2:#555!important;--line:#e3e5e8!important;}
+
+
+/* 大きく見やすいスマホ向け調整 */
+body{
+  font-size:17px!important;
+}
+header{
+  padding:18px 16px 14px!important;
+}
+h1{
+  font-size:25px!important;
+}
+.sub{
+  font-size:14px!important;
+  margin-top:7px!important;
+}
+.tabs{
+  gap:9px!important;
+  margin-top:14px!important;
+}
+.tab{
+  font-size:14px!important;
+  padding:14px 6px!important;
+}
+main{
+  padding:16px!important;
+}
+.card{
+  padding:18px!important;
+  margin-bottom:16px!important;
+  border-radius:20px!important;
+}
+.title{
+  font-size:19px!important;
+  margin-bottom:14px!important;
+}
+label{
+  font-size:14px!important;
+  margin:14px 0 7px!important;
+}
+input,select,textarea{
+  font-size:18px!important;
+  padding:16px!important;
+  min-height:56px!important;
+}
+textarea{
+  min-height:110px!important;
+}
+button{
+  font-size:17px!important;
+  padding:16px!important;
+  min-height:56px!important;
+}
+.item{
+  padding:17px!important;
+  margin:13px 0!important;
+  border-radius:18px!important;
+}
+.item h3{
+  font-size:20px!important;
+  margin-bottom:7px!important;
+}
+.meta{
+  font-size:15px!important;
+  line-height:1.8!important;
+}
+.pill{
+  font-size:13px!important;
+  padding:7px 11px!important;
+  margin-top:6px!important;
+}
+.checkGroup{
+  gap:10px!important;
+}
+.checkItem{
+  font-size:15px!important;
+  padding:13px!important;
+  min-height:54px!important;
+}
+.checkItem input{
+  width:24px!important;
+  height:24px!important;
+}
+.count{
+  padding:14px 8px!important;
+}
+.count b{
+  font-size:26px!important;
+}
+.count span{
+  font-size:13px!important;
+}
+.miniActions{
+  gap:10px!important;
+  margin-top:14px!important;
+}
+.miniActions button{
+  font-size:15px!important;
+  padding:13px 8px!important;
+}
+.bottomBar{
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom))!important;
+}
+.bottomInner{
+  gap:12px!important;
+}
+@media(max-width:520px){
+  .tabs{
+    grid-template-columns:repeat(4,1fr)!important;
+  }
+  .grid2{
+    grid-template-columns:1fr!important;
+  }
+}
+
+
+.flatSection{
+  margin-top:10px;
+  padding-top:auto;
+
+}
+.flatSection label{
+  font-size:15px!important;
+  font-weight:800!important;
+  color:#444!important;
+}
+.flatSection select,
+.flatSection textarea{
+  background:#fafafa!important;
+}
+.flatSection textarea{
+  margin-top:4px!important;
+}
+.checkGroup{
+  margin-top:10px!important;
+}
+.checkItem{
+  background:#fafafa!important;
+  border:1px solid #e5e5e5!important;
+  border-radius:16px!important;
+}
+
+
+.helperText{
+  font-size:13px;
+  color:#777;
+  margin-top:7px;
+  line-height:1.5;
+}
+#reserveCode{
+  font-weight:700;
+}
+
+
+#reserveFilterType,
+#reserveFilterColor{
+  font-weight:700;
+  background:#fafafa!important;
+}
+
+
+@media(max-width:520px){
+  }
+
+
+
+
+.sizeStockGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.sizeCount{
+  background:#fafafa;
+  border:1px solid #e5e5e5;
+  border-radius:16px;
+  padding:14px 8px;
+  text-align:center;
+}
+.sizeCount b{
+  display:block;
+  font-size:28px;
+  line-height:1;
+}
+.sizeCount span{
+  display:block;
+  margin-top:6px;
+  font-size:14px;
+  font-weight:900;
+  color:#555;
+}
+
+
+.availableSearchCard{
+  border:2px solid #333!important;
+}
+.availableResultTitle{
+  margin-top:18px;
+  margin-bottom:10px;
+  font-size:17px;
+  font-weight:900;
+}
+.availableCount{
+  background:#fff!important;
+  border:2px solid #333!important;
+}
+.availableCount b{
+  font-size:30px!important;
+}
+
+
+.sizeCount{
+  cursor:pointer;
+  width:100%;
+}
+.sizeCount.selectedSize{
+  background:#333!important;
+  color:white!important;
+  border-color:#333!important;
+}
+.sizeCount.selectedSize span{
+  color:white!important;
+}
+
+
+.reservationInfo{
+  margin:8px 0 6px;
+  display:grid;
+  gap:6px;
+}
+.reservationLine{
+  background:#f6f6f6;
+  border:1px solid #e4e4e4;
+  border-radius:12px;
+  padding:9px 10px;
+  font-size:13px;
+  line-height:1.6;
+  color:#333;
+}
+.reservationLine span{
+  display:block;
+  font-weight:700;
+}
+
+
+#reservationFormTitle{
+  transition:.2s;
+}
+
+
+.deleteBigBtn{
+  display:block!important;
+  width:100%!important;
+  min-height:60px!important;
+  font-size:17px!important;
+  border:2px solid #b94a48!important;
+  background:#f3dfdd!important;
+  color:#b94a48!important;
+  position:relative!important;
+  z-index:10!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+}
+.item,
+.miniActions{
+  position:relative!important;
+  z-index:1!important;
+}
+
+
+.deleteModal{
+  position: relative;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  
+  display:grid;
+  place-items:center;
+  padding:18px;
+}
+.hiddenModal{
+  display:none!important;
+}
+.deleteModalBox{
+  width:min(420px,100%);
+  background:#fff;
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.deleteModalTitle{
+  font-size:22px;
+  font-weight:900;
+  margin:0 0 12px;
+}
+.deleteModalText{
+  font-size:17px;
+  line-height:1.7;
+  background:#f6f6f6;
+  border:1px solid #e5e5e5;
+  border-radius:16px;
+  padding:14px;
+}
+.deleteModalActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+
+
+.availableCount{
+  cursor:pointer;
+  width:100%;
+}
+.availableCount.selectedAvailableSize{
+  background:#333!important;
+  color:white!important;
+  border-color:#333!important;
+}
+.availableCount.selectedAvailableSize span{
+  color:white!important;
+}
+#availableItemList .item{
+  border:2px solid #333;
+}
+
+
+.availableReserveItem{
+  cursor:pointer;
+  border:2px solid #333!important;
+  transition:.15s;
+}
+.availableReserveItem:active{
+  transform:scale(.99);
+  background:#f2f2f2!important;
+}
+.tapReserveHint{
+  margin-top:10px;
+  padding:4px;
+  background:#333;
+  color:white;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:900;
+  text-align:center;
+}
+
+
+.availableReserveItem{
+  cursor:pointer!important;
+}
+
+.availableReserveItem{
+  cursor:pointer!important;
+}
+
+
+.searchMenu{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+  margin-bottom:16px;
+}
+.searchMenuBtn{
+  width:100%;
+  min-height:66px!important;
+  font-size:18px!important;
+  font-weight:900!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  border:2px solid #333!important;
+  color:#333!important;
+  text-align:center;
+}
+.searchMenuBtn.active{
+  background:#333!important;
+  color:#fff!important;
+}
+.searchPanel{
+  display:none;
+}
+.searchPanel.activeSearchPanel{
+  display:block;
+}
+.usageListCard{
+  border:2px solid #333!important;
+}
+
+
+.inventorySearchCard{
+  border:2px solid #333!important;
+}
+.inventorySearchCard .sizeCount{
+  border-width:2px!important;
+}
+
+
+.periodRow{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:10px;
+  align-items:center;
+}
+.periodTilde{
+  font-size:18px;
+  font-weight:900;
+  color:#555;
+}
+
+
+.printUsageBtn{
+  width:100%;
+  margin-top:16px;
+}
+@media print{
+  body{
+    background:#fff!important;
+    padding-bottom:0!important;
+  }
+  header,
+  .bottomBar,
+  .searchMenu,
+  .printUsageBtn,
+  #searchPanel_available,
+  #searchPanel_inventory,
+  #counts,
+  .tabs{
+    display:none!important;
+  }
+  main{
+    padding:0!important;
+    max-width:none!important;
+  }
+  #home,
+  #searchPanel_usageList{
+    display:block!important;
+  }
+  .card{
+    box-shadow:none!important;
+    border:0!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  .usageListCard .title{
+    font-size:22px!important;
+    margin-bottom:12px!important;
+  }
+  .usageListCard label,
+  .usageListCard input,
+  .usageListCard select{
+    display:none!important;
+  }
+  #usageListResults .item{
+    break-inside:avoid;
+    page-break-inside:avoid;
+    border:1px solid #999!important;
+    margin:8px 0!important;
+    padding:10px!important;
+  }
+  #usageListResults .item h3{
+    font-size:16px!important;
+  }
+  #usageListResults .meta{
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+}
+
+
+.inventorySearchCard,
+.usageListCard{
+  border:2px solid #333!important;
+}
+
+
+.customerSearchItem{
+  cursor:pointer;
+  border:2px solid #333!important;
+}
+.customerSearchItem:active{
+  transform:scale(.99);
+  background:#f2f2f2!important;
+}
+
+
+.typeStockGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.typeStockCard{
+  border:2px solid #333;
+  border-radius:16px;
+  padding:14px;
+  background:#fff;
+}
+.typeStockMain{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.typeStockMain b{
+  display:grid;
+  place-items:center;
+  width:46px;
+  height:46px;
+  border-radius:14px;
+  background:#333;
+  color:#fff;
+  font-size:24px;
+}
+.typeStockMain span{
+  font-size:17px;
+  font-weight:900;
+}
+.typeStockSub{
+  margin-top:6px;
+  color:#666;
+  font-size:13px;
+  font-weight:800;
+}
+
+
+.typeStockCard{
+  width:100%;
+  text-align:left;
+  cursor:pointer;
+}
+.typeStockCard.selectedTypeStockCard{
+  background:#333!important;
+  color:#fff!important;
+}
+.typeStockCard.selectedTypeStockCard .typeStockSub,
+.typeStockCard.selectedTypeStockCard span{
+  color:#fff!important;
+}
+.typeStockCard.selectedTypeStockCard b{
+  background:#fff!important;
+  color:#333!important;
+}
+#sizeAvailableDetailList .item{
+  border:2px solid #333;
+}
+
+
+.typeStockWrap{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.inlineSizeDetailList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:2px;
+}
+.inlineSizeDetailList .item{
+  border:2px solid #333!important;
+}
+
+
+.sizeDetailReserveItem{
+  cursor:pointer;
+}
+.sizeDetailReserveItem:active{
+  transform:scale(.99);
+  background:#f2f2f2!important;
+}
+
+</style>
+</head>
+<body>
+<header>
+  <h1>れじぇんど袴在庫管理</h1>
+</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('home')">検索</button>
+    <button class="tab" onclick="showTab('reserve')">予約</button>
+    <button class="tab" onclick="showTab('add')">登録</button>
+    <button class="tab" onclick="showTab('settings')">設定</button>
+  </div>
+</header>
+
+<main>
+  <section id="home" class="active">
+    <div class="searchMenu">
+      <button type="button" class="searchMenuBtn active" onclick="showSearchPanel('available')">使用可能在庫検索</button>
+      <button type="button" class="searchMenuBtn" onclick="showSearchPanel('sizeAvailable')">サイズ別在庫数検索</button>
+      <button type="button" class="searchMenuBtn" onclick="showSearchPanel('inventory')">袴在庫検索</button>
+      <button type="button" class="searchMenuBtn" onclick="showSearchPanel('usageList')">使用日一覧検索</button>
+      <button type="button" class="searchMenuBtn" onclick="showSearchPanel('customer')">お客様名検索</button>
+    </div>
+
+    <div id="searchPanel_available" class="searchPanel activeSearchPanel">
+
+    <div class="card availableSearchCard">
+      <p class="title">使用可能在庫検索</p>
+
+      <label>種類</label>
+      <select id="availableType" onchange="selectedAvailableSize=''; updateAvailableColorFilter(); setDefaultAvailableUseDateToMarch();
+renderAvailableStock();">
+        <option value="">すべて</option>
+        <option>無地</option><option>刺繍</option><option>ボカシ</option><option>HL</option><option>レース</option><option>その他</option>
+      </select>
+
+      <label>色</label>
+      <select id="availableColor" onchange="selectedAvailableSize=''; renderAvailableStock()">
+        <option value="">すべて</option>
+      </select>
+
+      <label>使用日</label>
+      <input id="availableUseDate" type="date" value="2027-03-01" onchange="selectedAvailableSize=''; renderAvailableStock()" onfocus="prepareMarchCalendar(this)" />
+
+
+
+      <div class="availableResultTitle">使用可能数</div>
+      <div class="sizeStockGrid" id="availableSizeCounts"></div>
+      <div id="selectedAvailableSizeNote" class="helperText" style="display:none;margin-top:14px;"></div>
+      <div id="availableItemList" style="margin-top:12px;"></div>
+    </div>
+
+    </div>
+
+    
+    <div id="searchPanel_sizeAvailable" class="searchPanel">
+      <div class="card availableSearchCard">
+        <p class="title">サイズ別在庫数検索</p>
+
+        <label>サイズ</label>
+        <select id="sizeAvailableSize" onchange="selectedSizeAvailableGroup=''; renderSizeAvailableSearch()">
+          <option>SS</option>
+          <option>S</option>
+          <option>M</option>
+          <option>L</option>
+          <option>LL</option>
+          <option>3L</option>
+        </select>
+
+        <label>使用日</label>
+        <input id="sizeAvailableUseDate" type="date" value="2027-03-01" onchange="selectedSizeAvailableGroup=''; renderSizeAvailableSearch()" onfocus="prepareMarchCalendar(this)" />
+
+        <div class="availableResultTitle">使用可能な袴</div>
+        <div id="sizeAvailableResults" class="typeStockGrid"></div>
+
+      </div>
+    </div>
+
+<div id="searchPanel_inventory" class="searchPanel">
+
+
+    <div class="card">
+      <p class="title">在庫検索</p>
+
+      <label>種類</label>
+      <select id="filterType" onchange="selectedInventorySize=''; updateInventoryColorFilter(); renderItems();">
+        <option value="">すべて</option>
+        <option>無地</option><option>刺繍</option><option>ボカシ</option><option>HL</option><option>レース</option><option>その他</option>
+      </select>
+
+      <label>色</label>
+      <select id="filterColor" onchange="selectedInventorySize=''; renderItems()">
+        <option value="">すべて</option>
+      </select>
+<div id="sizeStockCard" style="display:none;margin-top:20px;">
+        <div class="availableResultTitle">サイズ別在庫数</div>
+        <div class="sizeStockGrid" id="sizeStockCounts"></div>
+      </div>
+    </div>
+
+
+    
+
+    
+
+    <div id="itemList"></div>
+  
+    </div>
+
+    <div id="searchPanel_usageList" class="searchPanel">
+      <div class="card usageListCard">
+        <p class="title">使用日一覧検索</p>
+
+        <label>使用期間</label>
+        <div class="periodRow">
+          <input id="usageListStartDate" type="date" value="2027-03-01" onchange="renderUsageListSearch()" />
+          <span class="periodTilde">〜</span>
+          <input id="usageListEndDate" type="date" value="2027-03-31" onchange="renderUsageListSearch()" />
+        </div>
+
+        <label>店舗</label>
+        <select id="usageListStore" onchange="renderUsageListSearch()">
+          <option value="">すべて</option>
+          <option>本店</option>
+          <option>伏見店</option>
+          <option>洛西店</option>
+        </select>
+<button type="button" class="btn-sub printUsageBtn" onclick="downloadUsageListPrintFile()">印刷用ファイルをダウンロード</button>
+
+        <div id="usageListResults" style="margin-top:18px;"></div>
+      </div>
+    </div>
+
+
+  
+    
+    <div id="searchPanel_customer" class="searchPanel">
+      <div class="card usageListCard">
+        <p class="title">お客様名検索</p>
+
+        <label>お客様名</label>
+        <input id="customerSearchKeyword" placeholder="お客様名を入力" oninput="renderCustomerSearch()" />
+
+        <div id="customerSearchResults" style="margin-top:18px;"></div>
+      </div>
+    </div>
+
+<div class="card">
+      <p class="title">登録数</p>
+      <div class="countBox" id="counts"></div>
+</section>
+
+  <section id="add">
+    <div class="card" id="formCard">
+      <p class="title" id="formTitle">袴を登録</p>
+
+      <div class="grid2">
+        <div>
+          <label>種類</label>
+          <select id="type" onchange="
+
+
+
+rebuildInventoryToMaster256();
+updateColorOptions(); updateAutoCode();">
+            <option>無地</option><option>刺繍</option><option>ボカシ</option><option>HL</option><option>レース</option><option>その他</option>
+          </select>
+        </div>
+        <div>
+          <label>色</label>
+          <select id="color" onchange="updateAutoCode()"></select>
+        </div>
+      </div>
+
+      <div class="flatSection">
+        <label>サイズ</label>
+        <select id="size" onchange="updateAutoCode()">
+          <option>SS</option>
+          <option>S</option>
+          <option>M</option>
+          <option>L</option>
+          <option>LL</option>
+          <option>3L</option>
+        </select>
+
+        <label>商品番号（自動）</label>
+        <input id="code" inputmode="numeric" placeholder="自動生成されます" readonly style="background:#f3efe9" />
+
+        <label>注意チェック</label>
+        <div class="checkGroup">
+          <label class="checkItem"><input type="checkbox" id="noAlter">直し不可</label>
+          <label class="checkItem"><input type="checkbox" id="noExtend">伸ばし不可</label>
+          <label class="checkItem"><input type="checkbox" id="noDelivery">お渡し不可</label>
+          <label class="checkItem"><input type="checkbox" id="hasWear">スレあり</label>
+        </div>
+
+        <label>元サイズ</label>
+        <select id="originalSize">
+          <option value="">未選択</option>
+          <option>SS</option>
+          <option>S</option>
+          <option>M</option>
+          <option>L</option>
+          <option>LL</option>
+        </select>
+
+        <label>メモ</label>
+        <textarea id="memo" placeholder="メモ"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn-main" onclick="saveItem()">保存</button>
+        <button class="btn-sub" onclick="clearForm()">クリア</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+  </section>
+
+  <section id="reserve">
+    <div class="card">
+      <p class="title" id="reservationFormTitle">予約登録</p>
+      <label>お客様名</label>
+      <input id="customer" placeholder="例：山田 花子" />
+
+      <label>店舗</label>
+      <select id="reserveStore">
+        <option>本店</option>
+        <option>伏見店</option>
+        <option>洛西店</option>
+      </select>
+
+      <label>使用日</label>
+      <input id="useDate" type="date" value="2027-03-01" onchange="handleUseDateChange()" onfocus="prepareMarchCalendar(this)" />
+      <div class="helperText"></div>
+      <div class="grid2">
+        <div>
+<label>受渡し日</label>
+<input id="pickupDate" type="date" value="2027-03-01" onchange="checkConflict()" onfocus="prepareMarchCalendar(this)" />
+<div class="helperText"></div>
+</div>
+        <div><label>返却日</label><input id="returnDate" type="date" value="2027-03-04" onchange="checkConflict()" onfocus="prepareMarchCalendar(this)" /></div>
+      </div>
+      <label>袴を絞り込み</label>
+
+      <div class="grid2">
+        <div>
+          <select id="reserveFilterType" onchange="renderReserveOptions()">
+            <option value="">種類すべて</option>
+            <option>無地</option>
+            <option>刺繍</option>
+            <option>ボカシ</option>
+            <option>HL</option>
+            <option>レース</option>
+            <option>その他</option>
+          </select>
+        </div>
+
+        <div>
+          <select id="reserveFilterColor" onchange="renderReserveOptions()">
+            <option value="">色すべて</option>
+          </select>
+        </div>
+      </div>
+
+      <label>袴を在庫から選択</label>
+      <select id="reserveCode" onchange="checkConflict()"></select>
+      <div class="helperText">使用可能袴から選ぶと、種類・色・袴も自動で入ります。</div>
+      <div class="helperText">登録済みの袴から選択できます。</div>
+      <label>予約メモ</label>
+      <textarea id="reserveMemo" placeholder="学校名・身長・注意点など"></textarea>
+      <div id="conflictMsg"></div>
+      <div class="actions">
+        <button class="btn-main" onclick="saveReservation()">予約保存</button>
+        <button class="btn-sub" onclick="clearReservation()">クリア</button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="title">予約検索</p>
+      <div id="reservationList"></div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="card">
+      <p class="title">データ管理</p>
+      <div class="notice">入力データは、この端末のブラウザ内に保存されます。</div>
+      <div class="actions">
+        <button class="btn-sub" onclick="exportData()">バックアップ</button>
+        <button class="btn-danger" onclick="resetAll()">全削除</button>
+      </div>
+      <label>バックアップ貼り付け</label>
+      <textarea id="importText" placeholder="バックアップした文字をここに貼り付け"></textarea>
+      <button class="btn-main" style="width:100%;margin-top:10px" onclick="importData()">復元</button>
+      
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0;">
+      <p class="title">Firebase連携</p>
+      <div class="notice">firebaseConfigを貼ると、在庫・予約をFirestoreに保存できます。</div>
+
+      <label>firebaseConfig</label>
+      <textarea id="firebaseConfigText" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+
+      <label>店舗データID</label>
+      <input id="firebaseStoreId" placeholder="legend_hakama" value="legend_hakama" />
+
+      <div class="actions">
+        <button class="btn-main" onclick="saveFirebaseSettings()">設定保存</button>
+        <button class="btn-sub" onclick="loadFromFirebase()">Firebaseから読込</button>
+      </div>
+      <button class="btn-main" style="width:100%;margin-top:10px" onclick="saveToFirebase()">Firebaseへ保存</button>
+      <button class="btn-sub" style="width:100%;margin-top:10px" onclick="startFirebaseRealtimeSync()">リアルタイム同期開始</button>
+
+      <div id="settingMsg"></div>
+    </div>
+  </section>
+</main>
+
+
+<div id="deleteModal" class="deleteModal hiddenModal">
+  <div class="deleteModalBox">
+    <p class="deleteModalTitle">削除確認</p>
+    <div id="deleteModalText" class="deleteModalText"></div>
+    <div class="deleteModalActions">
+      <button type="button" class="btn-sub" onclick="closeDeleteItemModal()">キャンセル</button>
+      <button type="button" class="btn-danger deleteBigBtn" onclick="confirmDeleteItem()">削除する</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="deleteReservationModal" class="deleteModal hiddenModal">
+  <div class="deleteModalBox">
+    <p class="deleteModalTitle">予約削除確認</p>
+    <div id="deleteReservationModalText" class="deleteModalText"></div>
+    <div class="deleteModalActions">
+      <button type="button" class="btn-sub" onclick="closeDeleteReservationModal()">キャンセル</button>
+      <button type="button" class="btn-danger deleteBigBtn" onclick="confirmDeleteReservation()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottomBar">
+  <div class="bottomInner">
+    <button class="btn-sub" onclick="showTab('home');showSearchPanel('available')">🔍 使用可能検索</button>
+    <button class="btn-main" onclick="showTab('home');showSearchPanel('sizeAvailable')">📏 サイズ別検索</button>
+  </div>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+
+// 強制リセット
+try{
+  localStorage.removeItem('hakama_items');
+}catch(e){}
+localStorage.removeItem('hakama_items');
+let items = [];
+let reservations = JSON.parse(localStorage.getItem('hakama_reservations') || '[]');
+let deletedSeedKeys = JSON.parse(localStorage.getItem('hakama_deleted_seed_keys') || '[]');
+
+function rebuildInventoryToMaster256(){
+  const master = [
+    {type:'無地', color:'黒', counts:{S:3,M:3,L:2,LL:5,'3L':1}},
+    {type:'無地', color:'紺', counts:{S:1,M:4,L:4,LL:3}},
+    {type:'無地', color:'緑', counts:{S:1,M:2,L:5,LL:2}},
+    {type:'無地', color:'えんじ', counts:{S:5,M:4,L:1,LL:1,'3L':1}},
+    {type:'無地', color:'紫', counts:{SS:1,S:4,M:5,L:4,LL:2,'3L':1}},
+
+    {type:'刺繍', color:'緑', counts:{SS:1,S:3,M:3,L:6,LL:2,'3L':3}},
+    {type:'刺繍', color:'紫', counts:{SS:1,S:2,M:7,L:7,LL:3,'3L':3}},
+    {type:'刺繍', color:'紺', counts:{S:6,M:7,L:10,LL:6,'3L':4}},
+    {type:'刺繍', color:'えんじ', counts:{SS:1,S:5,M:5,L:2,LL:4,'3L':2}},
+    {type:'刺繍', color:'黒', counts:{SS:3,S:3,M:6,L:8,LL:4,'3L':1}},
+    {type:'刺繍', color:'桜', counts:{S:1,M:2,LL:1}},
+    {type:'刺繍', color:'濃ピンク', counts:{S:2,M:2,L:3,LL:1}},
+
+    {type:'ボカシ', color:'ワイン', counts:{SS:2,S:3,M:8,L:8,LL:4,'3L':1}},
+    {type:'ボカシ', color:'紫', counts:{S:3,M:7,L:2,LL:2,'3L':1}},
+    {type:'ボカシ', color:'グレー', counts:{S:3,M:1,L:1,LL:1}},
+    {type:'ボカシ', color:'緑', counts:{SS:1,S:2,M:7,L:4,LL:9,'3L':3}},
+
+    {type:'レース', color:'ベージュ', counts:{S:1,M:1,L:2,LL:2}},
+    {type:'レース', color:'チャコール', counts:{S:1,M:1,L:3,'3L':1}},
+    {type:'レース', color:'ブラウン', counts:{S:1,M:4,L:2}},
+    {type:'レース', color:'白', counts:{SS:1,S:5,M:3,L:3,LL:2}},
+
+    {type:'その他', color:'白(梅)', counts:{SS:1,S:1,M:4,L:2,LL:2}},
+
+    {type:'HL', color:'A(紫)', counts:{SS:1,S:3,M:1,L:2,LL:2}},
+    {type:'HL', color:'C(ピンク)', counts:{SS:1,S:4,M:3,L:2}},
+    {type:'HL', color:'D(赤)', counts:{S:2,M:5,L:2,LL:1,'3L':1}}
+  ];
+
+  const typeShort = {
+    '無地':'無',
+    '刺繍':'刺',
+    'ボカシ':'ボ',
+    'HL':'H',
+    'レース':'レ',
+    'その他':'他'
+  };
+
+  const colorShort = {
+    '黒':'黒','紺':'紺','緑':'緑','紫':'紫','えんじ':'え',
+    '桜':'桜','濃ピンク':'濃','ワイン':'ワ','グレー':'グ',
+    'ベージュ':'ベ','チャコール':'チ','ブラウン':'ブ',
+    '白':'白','白(梅)':'梅',
+    'A(紫)':'A','C(ピンク)':'C','D(赤)':'D'
+  };
+
+  const rebuilt = [];
+
+  master.forEach(g=>{
+    Object.entries(g.counts).forEach(([size,count])=>{
+      const prefix = `${typeShort[g.type]}${colorShort[g.color]}${size}`;
+
+      for(let i=1;i<=count;i++){
+        rebuilt.push({
+          id:`${prefix}_${i}`,
+          code:`${prefix}-${String(i).padStart(3,'0')}`,
+          type:g.type,
+          color:g.color,
+          size:size,
+          originalSize:'',
+          checks:[],
+          memo:'',
+          updatedAt:new Date().toISOString()
+        });
+      }
+    });
+  });
+
+  items = rebuilt;
+
+  reservations = reservations.filter(r=>{
+    return items.some(x=>x.code===r.code);
+  });
+
+  localStorage.setItem('hakama_items', JSON.stringify(items));
+  localStorage.setItem('hakama_reservations', JSON.stringify(reservations));
+}
+
+rebuildInventoryToMaster256();
+
+
+function buildMasterInventoryItems(){
+  const master = [
+
+
+
+    {type:'無地', color:'黒', counts:{S:3,M:3,L:2,LL:5,'3L':1}},
+    {type:'無地', color:'紺', counts:{S:1,M:4,L:4,LL:3}},
+    {type:'無地', color:'緑', counts:{S:1,M:2,L:5,LL:2}},
+    {type:'無地', color:'えんじ', counts:{S:5,M:4,L:1,LL:1,'3L':1}},
+    {type:'無地', color:'紫', counts:{SS:1,S:4,M:5,L:4,LL:2,'3L':1}},
+
+    {type:'刺繍', color:'緑', counts:{SS:1,S:3,M:3,L:6,LL:2,'3L':3}},
+    {type:'刺繍', color:'紫', counts:{SS:1,S:2,M:7,L:7,LL:3,'3L':3}},
+    {type:'刺繍', color:'紺', counts:{S:6,M:7,L:10,LL:6,'3L':4}},
+    {type:'刺繍', color:'えんじ', counts:{SS:1,S:5,M:5,L:2,LL:4,'3L':2}},
+    {type:'刺繍', color:'黒', counts:{SS:3,S:3,M:6,L:8,LL:4,'3L':1}},
+
+
+    {type:'刺繍', color:'桜', counts:{S:1,M:2,LL:1}},
+    {type:'刺繍', color:'濃ピンク', counts:{S:2,M:2,L:3,LL:1}},
+
+    {type:'ボカシ', color:'ワイン', counts:{SS:2,S:3,M:8,L:8,LL:4,'3L':1}},
+    {type:'ボカシ', color:'紫', counts:{S:3,M:7,L:2,LL:2,'3L':1}},
+    {type:'ボカシ', color:'グレー', counts:{S:3,M:1,L:1,LL:1}},
+    {type:'ボカシ', color:'緑', counts:{SS:1,S:2,M:7,L:4,LL:9,'3L':3}},
+
+
+    {type:'レース', color:'ベージュ', counts:{S:1,M:1,L:2,LL:2}},
+    {type:'レース', color:'チャコール', counts:{S:1,M:1,L:3,'3L':1}},
+    {type:'レース', color:'ブラウン', counts:{S:1,M:4,L:2}},
+
+
+    {type:'レース', color:'白', counts:{SS:1,S:5,M:3,L:3,LL:2}},
+    {type:'その他', color:'白(梅)', counts:{SS:1,S:1,M:4,L:2,LL:2}},
+
+    {type:'HL', color:'A(紫)', counts:{SS:1,S:3,M:1,L:2,LL:2}},
+    {type:'HL', color:'C(ピンク)', counts:{SS:1,S:4,M:3,L:2}},
+    {type:'HL', color:'D(赤)', counts:{S:2,M:5,L:2,LL:1,'3L':1}}
+  ];
+
+  const typeShort = {
+    '無地':'無',
+    '刺繍':'刺',
+    'ボカシ':'ボ',
+    'HL':'H',
+    'レース':'レ',
+    'その他':'他'
+  };
+
+  const colorShort = {
+    '黒':'黒',
+    '紺':'紺',
+    '緑':'緑',
+    '紫':'紫',
+    'えんじ':'え',
+    '桜':'桜',
+    '濃ピンク':'濃',
+    'グレー':'グ',
+    'ワイン':'ワ',
+    '白':'白',
+    'ブラウン':'ブ',
+    'ベージュ':'ベ',
+    'チャコール':'チ',
+    'モス':'モ',
+    '白(梅)':'梅',
+    'A(紫)':'A',
+    'C(ピンク)':'C',
+    'D(赤)':'D'
+  };
+
+  const built = [];
+
+  master.forEach(g=>{
+    Object.entries(g.counts).forEach(([size,count])=>{
+      const prefix = `${typeShort[g.type] || String(g.type).slice(0,1)}${colorShort[g.color] || String(g.color).slice(0,1)}${size}`;
+
+      for(let i=1;i<=count;i++){
+        built.push({
+          id:`master_${prefix}_${String(i).padStart(3,'0')}`,
+          code:`${prefix}-${String(i).padStart(3,'0')}`,
+          type:g.type,
+          color:g.color,
+          size,
+          originalSize:'',
+          checks:[],
+          memo:'',
+          updatedAt:new Date().toISOString()
+        });
+      }
+    });
+  });
+
+  return built;
+}
+
+
+function getMasterInventoryTotal(){
+  return buildMasterInventoryItems().length;
+}
+
+function forceMasterInventory195(){
+  rebuildInventoryToMaster256();
+}
+
+forceMasterInventory195();
+localStorage.setItem('hakama_items', JSON.stringify(items));
+
+
+let editingId = null;
+let selectedInventorySize = '';
+let selectedAvailableSize = '';
+let selectedSizeAvailableGroup = '';
+let editingReservationId = null;
+let isAutoFillingReservation = false;
+
+const colorOptionsByType = {
+  '無地': ['黒','紺','緑','紫','えんじ'],
+  '刺繍': ['黒','紺','緑','紫','えんじ','桜','濃ピンク'],
+  'ボカシ': ['グレー','ワイン','紫','緑'],
+  'HL': ['A(紫)','C(ピンク)','D(赤)'],
+  'レース': ['白','ブラウン','ベージュ','チャコール','モス'],
+  'その他': ['白(梅)']
+};
+
+function persist(){
+  localStorage.setItem('hakama_items', JSON.stringify(items));
+  localStorage.setItem('hakama_reservations', JSON.stringify(reservations));
+  localStorage.setItem('hakama_deleted_seed_keys', JSON.stringify(deletedSeedKeys));
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function getTypeShort(type){
+  const map = {
+    '無地':'無',
+    '刺繍':'刺',
+    'ボカシ':'ボ',
+    'HL':'H',
+    'レース':'レ',
+    'その他':'他'
+  };
+  return map[type] || String(type || '').slice(0,1);
+}
+
+function getColorShort(color){
+  const map = {
+    '黒':'黒',
+    '紺':'紺',
+    '緑':'緑',
+    '紫':'紫',
+    'えんじ':'え',
+    '桜':'桜',
+    '濃ピンク':'濃',
+    'グレー':'グ',
+    'ワイン':'ワ',
+    '白':'白',
+    'ブラウン':'ブ',
+    'ベージュ':'ベ',
+    'チャコール':'チ',
+    'モス':'モ',
+    '白(梅)':'梅',
+    'A(紫)':'A',
+    'C(ピンク)':'C',
+    'D(赤)':'D'
+  };
+  return map[color] || String(color || '').slice(0,1);
+}
+
+function getCodePrefix(type, color, size=''){
+  return `${getTypeShort(type)}${getColorShort(color)}${size || ''}`;
+}
+
+function generateCode(type = val('type'), color = val('color'), size = val('size')){
+  const prefix = getCodePrefix(type, color, size);
+  const nums = items
+    .filter(x => String(x.code || '').startsWith(prefix + '-'))
+    .map(x=>{
+      const m = String(x.code || '').match(/-(\d+)$/);
+      return m ? parseInt(m[1]) : 0;
+    });
+  const next = (Math.max(0, ...nums) + 1).toString().padStart(3,'0');
+  return `${prefix}-${next}`;
+}
+
+function updateAutoCode(){
+  if(editingId) return;
+  const codeInput = document.getElementById('code');
+  if(codeInput){
+    codeInput.value = generateCode();
+  }
+}
+function updateColorOptions(selectedColor=''){
+  const type = document.getElementById('type').value;
+  const colorSelect = document.getElementById('color');
+  const colors = colorOptionsByType[type] || [];
+  colorSelect.innerHTML = colors.map(c => `<option>${c}</option>`).join('');
+  if(selectedColor && colors.includes(selectedColor)) colorSelect.value = selectedColor;
+  if(typeof updateAutoCode === 'function') updateAutoCode();
+}
+function getChecks(){
+  const labels = [];
+  if(document.getElementById('noAlter').checked) labels.push('直し不可');
+  if(document.getElementById('noExtend').checked) labels.push('伸ばし不可');
+  if(document.getElementById('noDelivery').checked) labels.push('お渡し不可');
+  if(document.getElementById('hasWear').checked) labels.push('スレあり');
+  return labels;
+}
+function setChecks(checks=[]){
+  document.getElementById('noAlter').checked = checks.includes('直し不可');
+  document.getElementById('noExtend').checked = checks.includes('伸ばし不可');
+  document.getElementById('noDelivery').checked = checks.includes('お渡し不可');
+  document.getElementById('hasWear').checked = checks.includes('スレあり');
+}
+function renderReserveOptions(){
+  if(typeof syncAllInventoryToMasterData === "function" && !window.__syncingInventory){ window.__syncingInventory = true; try{
+  localStorage.removeItem('hakama_items');
+}catch(e){}
+syncAllInventoryToMasterData(); window.__syncingInventory = false; }
+  const select = document.getElementById('reserveCode');
+  const colorSelect = document.getElementById('reserveFilterColor');
+
+  if(!select) return;
+
+  const typeFilter = document.getElementById('reserveFilterType')?.value || '';
+  const colorFilter = document.getElementById('reserveFilterColor')?.value || '';
+
+  // 色候補生成
+  let colors = [...new Set(
+    items
+      .filter(x => !typeFilter || x.type === typeFilter)
+      .map(x => x.color)
+  )];
+
+  const currentColor = colorSelect.value;
+  colorSelect.innerHTML = '<option value="">色すべて</option>' +
+    colors.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  if(colors.includes(currentColor)){
+    colorSelect.value = currentColor;
+  }
+
+  let filtered = items.filter(x=>{
+    return (!typeFilter || x.type===typeFilter)
+      && (!colorFilter || x.color===colorFilter);
+  });
+
+  if(!filtered.length){
+    select.innerHTML = '<option value="">該当する袴がありません</option>';
+    return;
+  }
+
+  const current = select.value;
+
+  select.innerHTML =
+    '<option value="">選択してください</option>' +
+    filtered.map(x=>{
+      const checks = (x.checks||[]).length ? '／' + (x.checks||[]).join('・') : '';
+      const label = `${x.type}｜${x.color}｜${x.size}｜${x.code}${checks}`;
+      return `<option value="${escapeHtml(x.code)}">${escapeHtml(label)}</option>`;
+    }).join('');
+
+  if(current && filtered.some(x=>x.code===current)){
+    select.value = current;
+  }
+}
+
+
+function resetReservationEditMode(){
+  editingReservationId = null;
+  const title = document.getElementById('reservationFormTitle');
+  if(title){
+    title.textContent = '予約登録';
+  }
+}
+
+
+
+let currentSearchPanel = 'available';
+
+function showSearchPanel(panel){
+  currentSearchPanel = panel;
+
+  document.querySelectorAll('.searchPanel').forEach(p=>p.classList.remove('activeSearchPanel'));
+  const target = document.getElementById(`searchPanel_${panel}`);
+  if(target) target.classList.add('activeSearchPanel');
+
+  document.querySelectorAll('.searchMenuBtn').forEach(btn=>btn.classList.remove('active'));
+  const buttons = document.querySelectorAll('.searchMenuBtn');
+  const index = {available:0, sizeAvailable:1, inventory:2, usageList:3, customer:4}[panel];
+  if(buttons[index]) buttons[index].classList.add('active');
+
+  if(panel === 'available') renderAvailableStock();
+  if(panel === 'sizeAvailable') renderSizeAvailableSearch();
+  if(panel === 'inventory') renderItems();
+  if(panel === 'usageList') renderUsageListSearch();
+  if(panel === 'customer'){
+    renderCustomerSearch();
+    setTimeout(()=>{
+      const input = document.getElementById('customerSearchKeyword');
+      if(input) input.focus();
+    }, 80);
+  }
+
+  if(target){
+    setTimeout(()=>{
+      target.scrollIntoView({
+        behavior:'smooth',
+        block:'start'
+      });
+    }, 50);
+  }
+}
+
+
+
+
+function reserveFromSizeAvailableItem(encodedCode){
+  const code = decodeURIComponent(String(encodedCode || ''));
+  const useDate = document.getElementById('sizeAvailableUseDate')?.value || getDefaultMarchDate();
+
+  const availableUseDate = document.getElementById('availableUseDate');
+  if(availableUseDate){
+    availableUseDate.value = useDate;
+  }
+
+  reserveFromAvailableItem(code);
+}
+
+
+function renderSizeAvailableSearch(){
+  if(typeof syncAllInventoryToMasterData === "function" && !window.__syncingInventory){ window.__syncingInventory = true; syncAllInventoryToMasterData(); window.__syncingInventory = false; }
+  const box = document.getElementById('sizeAvailableResults');
+  if(!box) return;
+
+  const size = document.getElementById('sizeAvailableSize')?.value || '';
+  const useDate = document.getElementById('sizeAvailableUseDate')?.value || getDefaultMarchDate();
+
+  const available = items.filter(x=>{
+    return (!size || x.size === size) && isItemAvailableForUseDate(x, useDate);
+  });
+
+  const groups = {};
+  available.forEach(x=>{
+    const key = `${x.type}｜${x.color}`;
+    if(!groups[key]){
+      groups[key] = {
+        key,
+        type:x.type,
+        color:x.color,
+        count:0
+      };
+    }
+    groups[key].count++;
+  });
+
+  const list = Object.values(groups).sort((a,b)=>{
+    return `${a.type}${a.color}`.localeCompare(`${b.type}${b.color}`, 'ja');
+  });
+
+  if(!list.length){
+    box.innerHTML = '<div class="empty">使用可能な袴がありません</div>';
+    return;
+  }
+
+  box.innerHTML = list.map(g=>{
+    const filtered = sortItemsByCode(
+      available.filter(x => `${x.type}｜${x.color}` === g.key)
+    );
+
+    const selected = selectedSizeAvailableGroup === g.key;
+
+    return `
+      <div class="typeStockWrap">
+        <button type="button"
+          class="typeStockCard${selected ? ' selectedTypeStockCard' : ''}"
+          onclick="selectSizeAvailableGroup('${escapeHtml(g.key)}')">
+
+          <div class="typeStockMain">
+            <b>${escapeHtml(g.count)}</b>
+            <span>${escapeHtml(g.type)} ／ ${escapeHtml(g.color)}</span>
+          </div>
+
+          <div class="typeStockSub">
+            ${escapeHtml(size)}サイズ｜タップで詳細
+          </div>
+        </button>
+
+        ${selected ? `
+          <div class="inlineSizeDetailList">
+            ${filtered.map(x=>`
+              <div class="item sizeDetailReserveItem" onclick="reserveFromSizeAvailableItem('${encodeURIComponent(x.code)}')">
+                <h3>${escapeHtml(x.code)}</h3>
+                <div class="meta">
+                  種類・色：${escapeHtml(x.type)} ／ ${escapeHtml(x.color)}<br>
+                  サイズ：${escapeHtml(x.size||'-')}<br>
+                  元サイズ：${escapeHtml(x.originalSize||'-')}<br>
+                  ${(x.checks||[]).length ? (x.checks||[]).map(c=>`<span class="pill">${escapeHtml(c)}</span>`).join('') + '<br>' : ''}
+                  ${x.memo ? 'メモ：'+escapeHtml(x.memo) : ''}
+                  <div class="tapReserveHint">タップしてこの袴を予約</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function selectSizeAvailableGroup(key){
+  selectedSizeAvailableGroup =
+    selectedSizeAvailableGroup === key ? '' : key;
+
+  renderSizeAvailableSearch();
+}
+
+
+
+function renderCustomerSearch(){
+  const box = document.getElementById('customerSearchResults');
+  if(!box) return;
+
+  const keyword = (document.getElementById('customerSearchKeyword')?.value || '').trim().toLowerCase();
+
+  if(!keyword){
+    box.innerHTML = '';
+    return;
+  }
+
+  let list = reservations.filter(r=>{
+    return String(r.customer || '').toLowerCase().includes(keyword);
+  });
+
+  list = list.sort((a,b)=>String(a.useDate || '').localeCompare(String(b.useDate || '')));
+
+  if(!list.length){
+    box.innerHTML = '<div class="empty">該当する予約はありません</div>';
+    return;
+  }
+
+  box.innerHTML = list.map(r=>{
+    const item = items.find(x=>x.code===r.code);
+    const itemText = item ? `${item.type}／${item.color}／${item.size}` : '-';
+    const period = getReservationPeriod(r);
+
+    return `
+      <div class="item customerSearchItem" onclick="editReservation('${r.id}')">
+        <h3>${escapeHtml(r.customer || '-')} 様</h3>
+        <div class="meta">
+          店舗：${escapeHtml(r.store || '-')}<br>
+          使用期間：${escapeHtml(period.start)}〜${escapeHtml(period.end)}<br>
+          使用日：${escapeHtml(r.useDate || '-')}<br>
+          袴：${escapeHtml(itemText)}<br>
+          商品番号：${escapeHtml(r.code || '-')}<br>
+          ${r.memo ? 'メモ：'+escapeHtml(r.memo) : ''}
+          <div class="tapReserveHint">タップして予約を編集</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+
+
+function renderUsageListSearch(){
+  const box = document.getElementById('usageListResults');
+  if(!box) return;
+
+  const startDate = document.getElementById('usageListStartDate')?.value || '';
+  const endDate = document.getElementById('usageListEndDate')?.value || '';
+  const store = document.getElementById('usageListStore')?.value || '';
+  const keyword = (document.getElementById('usageListKeyword')?.value || '').toLowerCase();
+
+  let list = reservations.filter(r=>{
+    const period = getReservationPeriod(r);
+
+    let hitDate = true;
+
+    if(startDate && endDate){
+      hitDate = dateRangesOverlap(
+        startDate,
+        endDate,
+        period.start,
+        period.end
+      );
+    }else if(startDate){
+      hitDate = dateRangesOverlap(
+        startDate,
+        startDate,
+        period.start,
+        period.end
+      );
+    }else if(endDate){
+      hitDate = dateRangesOverlap(
+        endDate,
+        endDate,
+        period.start,
+        period.end
+      );
+    }
+
+    const hitStore = !store || r.store === store;
+
+    const hay = [
+      r.customer,
+      r.code,
+      r.store,
+      r.useDate,
+      r.pickupDate,
+      r.returnDate,
+      r.memo
+    ].join(' ').toLowerCase();
+
+    const hitKeyword = !keyword || hay.includes(keyword);
+
+    return hitDate && hitStore && hitKeyword;
+  });
+
+  list = list.sort((a,b)=>{
+    return String(a.useDate || '').localeCompare(String(b.useDate || ''));
+  });
+
+  if(!list.length){
+    box.innerHTML = '<div class="empty">該当する予約はありません</div>';
+    return;
+  }
+
+  box.innerHTML = list.map(r=>{
+    const item = items.find(x=>x.code===r.code);
+    const itemText = item ? `${item.type}／${item.color}／${item.size}` : '-';
+    const period = getReservationPeriod(r);
+
+    return `
+      <div class="item">
+        <h3>${escapeHtml(r.customer || '-')} 様</h3>
+        <div class="meta">
+          店舗：${escapeHtml(r.store || '-')}<br>
+          使用期間：${escapeHtml(period.start)}〜${escapeHtml(period.end)}<br>
+          使用日：${escapeHtml(r.useDate || '-')}<br>
+          袴：${escapeHtml(itemText)}<br>
+          商品番号：${escapeHtml(r.code || '-')}<br>
+          ${r.memo ? 'メモ：'+escapeHtml(r.memo) : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+
+
+
+function openAvailableSearchFromBottom(){
+  showTab('home');
+
+  setTimeout(()=>{
+    if(typeof showSearchPanel === 'function'){
+      showSearchPanel('available');
+    }
+
+    const panel = document.getElementById('searchPanel_available');
+    if(panel){
+      panel.classList.add('activeSearchPanel');
+    }
+
+    const buttons = document.querySelectorAll('.searchMenuBtn');
+    buttons.forEach(btn=>btn.classList.remove('active'));
+    if(buttons[0]) buttons[0].classList.add('active');
+
+    if(typeof renderAvailableStock === 'function'){
+      renderAvailableStock();
+    }
+  }, 80);
+}
+
+
+
+
+function downloadUsageListPrintFile(){
+  renderUsageListSearch();
+
+  const startDate = document.getElementById('usageListStartDate')?.value || '';
+  const endDate = document.getElementById('usageListEndDate')?.value || '';
+  const store = document.getElementById('usageListStore')?.value || '';
+  const results = document.getElementById('usageListResults')?.innerHTML || '<div>該当する予約はありません</div>';
+
+  const title = '使用日一覧';
+  const periodText = startDate || endDate ? `${startDate || '-'} 〜 ${endDate || '-'}` : '期間指定なし';
+  const storeText = store || 'すべて';
+
+  const fileHtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+  @page{
+    size:A4;
+    margin:6mm;
+  }
+  *{
+    box-sizing:border-box;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+    padding:4px;
+    color:#222;
+    background:#fff;
+  }
+  h1{
+    margin:0 0 4px;
+    font-size:20px;
+    line-height:1.2;
+  }
+  .info{
+    font-size:12px;
+    margin-bottom:8px;
+    color:#555;
+    line-height:1.3;
+  }
+  .printGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px 7px;
+    align-items:start;
+  }
+  .item{
+    border:1px solid #aaa;
+    border-radius:6px;
+    padding:6px 7px;
+    margin:0;
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+  .item h3{
+    margin:0 0 3px;
+    font-size:14px;
+    line-height:1.25;
+  }
+  .meta{
+    font-size:11.5px;
+    line-height:1.35;
+  }
+  .printBtn{
+    margin-bottom:8px;
+    padding:9px 12px;
+    border-radius:8px;
+    border:0;
+    background:#333;
+    color:white;
+    font-weight:800;
+    font-size:13px;
+  }
+  @media print{
+    .printBtn{display:none;}
+    body{padding:0;}
+  }
+  @media(max-width:700px){
+    .printGrid{
+      grid-template-columns:1fr;
+    }
+  }
+
+.inventorySearchCard,
+.usageListCard{
+  border:2px solid #333!important;
+}
+
+
+.customerSearchItem{
+  cursor:pointer;
+  border:2px solid #333!important;
+}
+.customerSearchItem:active{
+  transform:scale(.99);
+  background:#f2f2f2!important;
+}
+
+
+.typeStockGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.typeStockCard{
+  border:2px solid #333;
+  border-radius:16px;
+  padding:14px;
+  background:#fff;
+}
+.typeStockMain{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.typeStockMain b{
+  display:grid;
+  place-items:center;
+  width:46px;
+  height:46px;
+  border-radius:14px;
+  background:#333;
+  color:#fff;
+  font-size:24px;
+}
+.typeStockMain span{
+  font-size:17px;
+  font-weight:900;
+}
+.typeStockSub{
+  margin-top:6px;
+  color:#666;
+  font-size:13px;
+  font-weight:800;
+}
+
+
+.typeStockCard{
+  width:100%;
+  text-align:left;
+  cursor:pointer;
+}
+.typeStockCard.selectedTypeStockCard{
+  background:#333!important;
+  color:#fff!important;
+}
+.typeStockCard.selectedTypeStockCard .typeStockSub,
+.typeStockCard.selectedTypeStockCard span{
+  color:#fff!important;
+}
+.typeStockCard.selectedTypeStockCard b{
+  background:#fff!important;
+  color:#333!important;
+}
+#sizeAvailableDetailList .item{
+  border:2px solid #333;
+}
+
+
+.typeStockWrap{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.inlineSizeDetailList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:2px;
+}
+.inlineSizeDetailList .item{
+  border:2px solid #333!important;
+}
+
+
+.sizeDetailReserveItem{
+  cursor:pointer;
+}
+.sizeDetailReserveItem:active{
+  transform:scale(.99);
+  background:#f2f2f2!important;
+}
+
+</style>
+</head>
+<body>
+<button class="printBtn" onclick="window.print()">この一覧を印刷</button>
+<h1>${title}</h1>
+<div class="info">期間：${periodText}　店舗：${storeText}</div>
+<div class="printGrid">
+${results}
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([fileHtml], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `使用日一覧_${startDate || 'all'}_${endDate || 'all'}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+
+function printUsageList(){
+  showSearchPanel('usageList');
+  renderUsageListSearch();
+  setTimeout(()=>{
+    window.print();
+  }, 100);
+}
+
+
+
+function getInventoryCountSummary(){
+  const summary = {};
+  items.forEach(x=>{
+    const key = `${x.type}|${x.color}|${x.size}`;
+    summary[key] = (summary[key] || 0) + 1;
+  });
+  return summary;
+}
+
+function showTab(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  const section = document.getElementById(id);
+  if(section) section.classList.add('active');
+
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const index = {home:0,reserve:1,add:2,settings:3}[id];
+  const tabs = document.querySelectorAll('.tab');
+  if(tabs[index]) tabs[index].classList.add('active');
+
+  if(id==='add' && !editingId){
+    updateAutoCode();
+  }
+
+  if(id==='reserve'){
+    if(!editingReservationId && !isAutoFillingReservation && typeof resetReservationEditMode === 'function'){
+      resetReservationEditMode();
+    }
+
+    if(!isAutoFillingReservation){
+      if(typeof lockMarchDefaultsOnLoad === 'function') lockMarchDefaultsOnLoad();
+      if(typeof setMarchDefaultsForDateInputs === 'function') setMarchDefaultsForDateInputs();
+    }
+  }
+
+  if(!isAutoFillingReservation){
+    if(typeof autoRenumberAllItemCodesOnce === 'function') autoRenumberAllItemCodesOnce();
+  }
+
+  renderReserveOptions();
+  renderItems();
+  renderReservations();
+if(typeof renderUsageListSearch === 'function') renderUsageListSearch();
+if(typeof renderCustomerSearch === 'function') renderCustomerSearch();
+if(typeof renderSizeAvailableSearch === 'function') renderSizeAvailableSearch();
+
+  if(!isAutoFillingReservation && typeof lockMarchDefaultsOnLoad === 'function'){
+    lockMarchDefaultsOnLoad();
+  }
+}
+
+function saveItem(){
+  const code = editingId
+    ? document.getElementById('code').value.trim()
+    : generateCode(val('type'), val('color'), val('size'));
+  document.getElementById('code').value = code;
+
+  const data = {
+    id: editingId || uid(),
+    code,
+    type: val('type'),
+    color: val('color'),
+    size: val('size'),
+    originalSize: val('originalSize'),
+    checks: getChecks(),
+    memo: val('memo'),
+    updatedAt: new Date().toISOString()
+  };
+
+  if(editingId){
+    items = items.map(x=>x.id===editingId ? data : x);
+    msg('formMsg','修正しました','good');
+  }else{
+    if(items.some(x=>x.code===code)){
+      msg('formMsg','同じ商品番号があります。もう一度保存してください。','bad');
+      document.getElementById('code').value = generateCode();
+      return;
+    }
+    items.unshift(data);
+    msg('formMsg','登録しました','good');
+  }
+  persist();
+  clearForm(false);
+  renderReserveOptions();
+  renderItems();
+  showTab('home');
+}
+function val(id){return document.getElementById(id).value}
+function msg(id,text,cls){
+  document.getElementById(id).innerHTML = `<div class="notice ${cls||''}">${text}</div>`;
+}
+function clearForm(clearMsg=true){
+  editingId=null;
+  document.getElementById('code').value = generateCode();
+  document.getElementById('type').value = '無地';
+  
+
+
+
+
+
+
+
+
+
+function addSeedInventoryShishuPurpleOnce(){
+  const seedKey = 'seed_shishu_purple_v1';
+  if(localStorage.getItem(seedKey) === 'done') return;
+
+  const required = [
+    ['SS',1],
+    ['S',2],
+    ['M',7],
+    ['L',7],
+    ['LL',3],
+    ['3L',3]
+  ];
+
+  const nums = items.map(x=>{
+    const m = String(x.code || '').match(/H-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+
+  let next = Math.max(0, ...nums) + 1;
+
+  required.forEach(([size, count])=>{
+    for(let i=0; i<count; i++){
+      items.push({
+        id: uid(),
+        code: `H-${String(next).padStart(3,'0')}`,
+        type: '刺繍',
+        color: '紫',
+        size,
+        originalSize: '',
+        checks: [],
+        memo: '',
+        updatedAt: new Date().toISOString()
+      });
+      next++;
+    }
+  });
+
+  persist();
+  localStorage.setItem(seedKey, 'done');
+}
+
+
+// disabled old auto stock: // disabled // disabled old stock call;
+// disabled old auto stock: // disabled // disabled old stock call;
+// disabled old auto stock: // disabled // disabled old stock call;
+// disabled old auto stock: // disabled // disabled old stock call;
+// disabled old auto stock: // disabled // disabled old stock call;
+
+function addSeedInventoryShishuNavyOnce(){
+  const seedKey = 'seed_shishu_navy_v1';
+  if(localStorage.getItem(seedKey) === 'done') return;
+
+  const required = [
+    ['S',6],
+    ['M',7],
+    ['L',10],
+    ['LL',6],
+    ['3L',4]
+  ];
+
+  const nums = items.map(x=>{
+    const m = String(x.code || '').match(/H-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+
+  let next = Math.max(0, ...nums) + 1;
+
+  required.forEach(([size, count])=>{
+    for(let i=0; i<count; i++){
+      items.push({
+        id: uid(),
+        code: `H-${String(next).padStart(3,'0')}`,
+        type: '刺繍',
+        color: '紺',
+        size,
+        originalSize: '',
+        checks: [],
+        memo: '',
+        updatedAt: new Date().toISOString()
+      });
+      next++;
+    }
+  });
+
+  persist();
+  localStorage.setItem(seedKey, 'done');
+}
+
+
+
+function addSeedInventoryShishuEnjiOnce(){
+  const seedKey = 'seed_shishu_enji_v1';
+  if(localStorage.getItem(seedKey) === 'done') return;
+
+  const required = [
+    ['SS',1],
+    ['S',5],
+    ['M',5],
+    ['L',2],
+    ['LL',4],
+    ['3L',2]
+  ];
+
+  const nums = items.map(x=>{
+    const m = String(x.code || '').match(/H-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+
+  let next = Math.max(0, ...nums) + 1;
+
+  required.forEach(([size, count])=>{
+    for(let i=0; i<count; i++){
+      items.push({
+        id: uid(),
+        code: `H-${String(next).padStart(3,'0')}`,
+        type: '刺繍',
+        color: 'えんじ',
+        size,
+        originalSize: '',
+        checks: [],
+        memo: '',
+        updatedAt: new Date().toISOString()
+      });
+      next++;
+    }
+  });
+
+  persist();
+  localStorage.setItem(seedKey, 'done');
+}
+
+
+
+function addSeedInventoryShishuBlackOnce(){
+  const seedKey = 'seed_shishu_black_v1';
+  if(localStorage.getItem(seedKey) === 'done') return;
+
+  const required = [
+    ['SS',3],
+    ['S',3],
+    ['M',6],
+    ['L',8],
+    ['LL',4],
+    ['3L',1]
+  ];
+
+  const nums = items.map(x=>{
+    const m = String(x.code || '').match(/H-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+
+  let next = Math.max(0, ...nums) + 1;
+
+  required.forEach(([size, count])=>{
+    for(let i=0; i<count; i++){
+      items.push({
+        id: uid(),
+        code: `H-${String(next).padStart(3,'0')}`,
+        type: '刺繍',
+        color: '黒',
+        size,
+        originalSize: '',
+        checks: [],
+        memo: '',
+        updatedAt: new Date().toISOString()
+      });
+      next++;
+    }
+  });
+
+  persist();
+  localStorage.setItem(seedKey, 'done');
+}
+
+
+
+function addSeedInventoryMujiBlackOnce(){
+  const seedKey = 'seed_muji_black_v1';
+  if(localStorage.getItem(seedKey) === 'done') return;
+
+  const required = [
+    ['S',3],
+    ['M',3],
+    ['L',2],
+    ['LL',5],
+    ['3L',1]
+  ];
+
+  const nums = items.map(x=>{
+    const m = String(x.code || '').match(/H-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+
+  let next = Math.max(0, ...nums) + 1;
+
+  required.forEach(([size, count])=>{
+    for(let i=0; i<count; i++){
+      items.push({
+        id: uid(),
+        code: `H-${String(next).padStart(3,'0')}`,
+        type: '無地',
+        color: '黒',
+        size,
+        originalSize: '',
+        checks: [],
+        memo: '',
+        updatedAt: new Date().toISOString()
+      });
+      next++;
+    }
+  });
+
+  persist();
+  localStorage.setItem(seedKey, 'done');
+}
+
+
+updateColorOptions();
+  document.getElementById('size').value = 'SS';
+  updateAutoCode();
+  document.getElementById('originalSize').value = '';
+  document.getElementById('memo').value = '';
+  setChecks([]);
+  document.getElementById('formTitle').textContent='袴を登録';
+  document.getElementById('formCard').classList.remove('editMode');
+  if(clearMsg) document.getElementById('formMsg').innerHTML='';
+}
+
+function updateInventoryColorFilter(){
+  const typeFilter = document.getElementById('filterType')?.value || '';
+  const colorSelect = document.getElementById('filterColor');
+  if(!colorSelect) return;
+
+  const current = colorSelect.value;
+  const colors = [...new Set(
+    items
+      .filter(x => !typeFilter || x.type === typeFilter)
+      .map(x => x.color)
+      .filter(Boolean)
+  )];
+
+  colorSelect.innerHTML = '<option value="">すべて</option>' +
+    colors.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  if(colors.includes(current)){
+    colorSelect.value = current;
+  }
+}
+
+
+function updateAvailableColorFilter(){
+  const typeFilter = document.getElementById('availableType')?.value || '';
+  const colorSelect = document.getElementById('availableColor');
+  if(!colorSelect) return;
+
+  const current = colorSelect.value;
+  const colors = [...new Set(
+    items
+      .filter(x => !typeFilter || x.type === typeFilter)
+      .map(x => x.color)
+      .filter(Boolean)
+  )];
+
+  colorSelect.innerHTML = '<option value="">すべて</option>' +
+    colors.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  if(colors.includes(current)){
+    colorSelect.value = current;
+  }
+}
+
+function toDateOnly(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function addDays(dateStr, days){
+  const d = toDateOnly(dateStr);
+  if(!d) return '';
+  d.setDate(d.getDate() + days);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function dateRangesOverlap(startA, endA, startB, endB){
+  const a1 = toDateOnly(startA);
+  const a2 = toDateOnly(endA);
+  const b1 = toDateOnly(startB);
+  const b2 = toDateOnly(endB);
+  if(!a1 || !a2 || !b1 || !b2) return false;
+  return a1 <= b2 && b1 <= a2;
+}
+
+function isItemAvailableForUseDate(item, useDate){
+  if(!useDate) return true;
+
+  const targetStart = useDate;
+  const targetEnd = addDays(useDate, 3);
+
+  return !reservations.some(r=>{
+    if(r.code !== item.code) return false;
+
+    // 予約側は「お渡し日の1日前」から「返却日」までを使用中期間とする
+    const baseStart = r.pickupDate || r.useDate;
+    const reservedStart = addDays(baseStart, -1);
+    const reservedEnd = r.returnDate || addDays(r.useDate, 3);
+
+    return dateRangesOverlap(targetStart, targetEnd, reservedStart, reservedEnd);
+  });
+}
+
+
+function selectAvailableSize(size){
+  selectedAvailableSize = selectedAvailableSize === size ? '' : size;
+  renderAvailableStock();
+}
+
+function availableItemDetailsHtml(list){
+  if(!selectedAvailableSize) return '';
+
+  const filtered = sortItemsByCode(
+    list.filter(x => x.size === selectedAvailableSize)
+  );
+
+  if(!filtered.length){
+    return '<div class="empty">該当する使用可能袴がありません</div>';
+  }
+
+  return filtered.map(x=>`
+    <div class="item availableReserveItem" data-code="${encodeURIComponent(x.code)}">
+      <h3>${escapeHtml(x.code)}</h3>
+      <div class="meta">
+        種類・色：${escapeHtml(x.type)} ／ ${escapeHtml(x.color)}<br>
+        サイズ：${escapeHtml(x.size||'-')}<br>
+        元サイズ：${escapeHtml(x.originalSize||'-')}<br>
+        ${(x.checks||[]).length ? (x.checks||[]).map(c=>`<span class="pill">${escapeHtml(c)}</span>`).join('') + '<br>' : ''}
+        ${x.memo ? 'メモ：'+escapeHtml(x.memo) : ''}
+        <div class="tapReserveHint">タップしてこの袴を予約</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+
+function setReservationFormFromItem(item, code, useDate){
+  if(!item) return;
+
+  const typeSelect = document.getElementById('reserveFilterType');
+  const colorSelect = document.getElementById('reserveFilterColor');
+  const codeSelect = document.getElementById('reserveCode');
+
+  // 1. 種類をセット
+  if(typeSelect){
+    typeSelect.value = item.type || '';
+  }
+
+  // 2. 色の選択肢を「種類」に合わせて作り直してから色をセット
+  if(colorSelect){
+    const colors = [...new Set(
+      items
+        .filter(x => !item.type || x.type === item.type)
+        .map(x => x.color)
+        .filter(Boolean)
+    )];
+
+    colorSelect.innerHTML = '<option value="">色すべて</option>' +
+      colors.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+    colorSelect.value = item.color || '';
+  }
+
+  // 3. 袴選択肢を「種類・色」に合わせて作り直してから商品番号をセット
+  if(codeSelect){
+    const filtered = items.filter(x=>{
+      return (!item.type || x.type === item.type)
+        && (!item.color || x.color === item.color);
+    });
+
+    codeSelect.innerHTML =
+      '<option value="">選択してください</option>' +
+      filtered.map(x=>{
+        const checks = (x.checks||[]).length ? '／' + (x.checks||[]).join('・') : '';
+        const label = `${x.type}｜${x.color}｜${x.size}｜${x.code}${checks}`;
+        return `<option value="${escapeHtml(x.code)}">${escapeHtml(label)}</option>`;
+      }).join('');
+
+    codeSelect.value = code;
+
+    if(codeSelect.value !== code){
+      codeSelect.innerHTML += `<option value="${escapeHtml(code)}">${escapeHtml(item.type)}｜${escapeHtml(item.color)}｜${escapeHtml(item.size)}｜${escapeHtml(code)}</option>`;
+      codeSelect.value = code;
+    }
+  }
+
+  // 4. 使用日と返却日をセット
+  const useInput = document.getElementById('useDate');
+  if(useInput){
+    useInput.value = useDate;
+    useInput.defaultValue = useDate;
+    useInput.setAttribute('value', useDate);
+  }
+
+  const returnInput = document.getElementById('returnDate');
+  if(returnInput){
+    const ret = addDays(useDate, 3);
+    returnInput.value = ret;
+    returnInput.defaultValue = ret;
+    returnInput.setAttribute('value', ret);
+  }
+
+  checkConflict();
+}
+
+
+function reserveFromAvailableItem(code){
+  code = String(code || '');
+  const item = items.find(x => String(x.code) === code);
+
+  if(!item){
+    alert('袴データが見つかりません。もう一度検索してください。');
+    return;
+  }
+
+  const useDate = document.getElementById('availableUseDate')?.value || getDefaultMarchDate();
+
+  isAutoFillingReservation = true;
+
+  showTab('reserve');
+
+  setReservationFormFromItem(item, code, useDate);
+
+  setTimeout(()=>{
+    setReservationFormFromItem(item, code, useDate);
+
+    const customerInput = document.getElementById('customer');
+    if(customerInput) customerInput.focus();
+
+    isAutoFillingReservation = false;
+  }, 150);
+}
+
+function renderAvailableStock(){
+  if(typeof syncAllInventoryToMasterData === "function" && !window.__syncingInventory){ window.__syncingInventory = true; syncAllInventoryToMasterData(); window.__syncingInventory = false; }
+  const box = document.getElementById('availableSizeCounts');
+  if(!box) return;
+
+  const typeFilter = document.getElementById('availableType')?.value || '';
+  const colorFilter = document.getElementById('availableColor')?.value || '';
+  const useDate = document.getElementById('availableUseDate')?.value || '';
+
+  const filtered = items.filter(x=>{
+    return (!typeFilter || x.type === typeFilter)
+      && (!colorFilter || x.color === colorFilter)
+      && isItemAvailableForUseDate(x, useDate);
+  });
+
+  const sizes = ['SS','S','M','L','LL','3L'];
+  box.innerHTML = sizes.map(size=>{
+    const count = filtered.filter(x=>x.size===size).length;
+    const selectedClass = selectedAvailableSize===size ? ' selectedAvailableSize' : '';
+    return `<button type="button" class="sizeCount availableCount${selectedClass}" onclick="selectAvailableSize('${size}')"><b>${count}</b><span>${size}</span></button>`;
+  }).join('');
+
+  const note = document.getElementById('selectedAvailableSizeNote');
+  const detailBox = document.getElementById('availableItemList');
+
+  if(note){
+    note.style.display = selectedAvailableSize ? 'block' : 'none';
+    note.textContent = selectedAvailableSize ? `${selectedAvailableSize}サイズの使用可能袴を表示中です。もう一度サイズを押すと解除できます。` : '';
+  }
+
+  if(detailBox){
+    detailBox.innerHTML = selectedAvailableSize ? availableItemDetailsHtml(filtered) : '';
+
+    detailBox.querySelectorAll('.availableReserveItem').forEach(card=>{
+      card.onclick = function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        const code = decodeURIComponent(this.getAttribute('data-code') || '');
+        reserveFromAvailableItem(code);
+      };
+    });
+  }
+}
+
+function selectInventorySize(size){
+  selectedInventorySize = selectedInventorySize === size ? '' : size;
+  renderItems();
+}
+
+
+function reservationInfoHtml(code){
+  const related = reservations
+    .filter(r => r.code === code)
+    .sort((a,b) => String(a.useDate).localeCompare(String(b.useDate)));
+
+  if(!related.length) return '';
+
+  return `
+    <div class="reservationInfo">
+      ${related.map(r=>{
+        const start = r.pickupDate || r.useDate || '-';
+        const end = r.returnDate || '-';
+        const store = r.store || '-';
+        const customer = r.customer || '-';
+        return `
+          <div class="reservationLine">
+            <span>使用期間：${escapeHtml(start)}〜${escapeHtml(end)}</span>
+            <span>店舗：${escapeHtml(store)}</span>
+            <span>名前：${escapeHtml(customer)}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+
+function sortItemsByCode(list){
+  return [...list].sort((a,b)=>{
+    const ac = String(a.code || '');
+    const bc = String(b.code || '');
+
+    const am = ac.match(/-(\d+)$/);
+    const bm = bc.match(/-(\d+)$/);
+
+    const an = am ? parseInt(am[1]) : 0;
+    const bn = bm ? parseInt(bm[1]) : 0;
+
+    if(ac === bc) return 0;
+
+    // prefix compare first
+    const ap = ac.replace(/-(\d+)$/,'');
+    const bp = bc.replace(/-(\d+)$/,'');
+
+    if(ap !== bp){
+      return ap.localeCompare(bp,'ja');
+    }
+
+    return an - bn;
+  });
+}
+
+
+function renderItems(){
+  if(typeof syncAllInventoryToMasterData === "function" && !window.__syncingInventory){ window.__syncingInventory = true; syncAllInventoryToMasterData(); window.__syncingInventory = false; }
+  forceMasterInventory195();
+localStorage.setItem('hakama_items', JSON.stringify(items));
+  const q = (document.getElementById('q')?.value || '').toLowerCase();
+  const ft = document.getElementById('filterType')?.value || '';
+  const fc = document.getElementById('filterColor')?.value || '';
+  let baseList = items.filter(x=>{
+    const hay = [x.code,x.type,x.color,x.size,x.originalSize,(x.checks||[]).join(' '),x.memo].join(' ').toLowerCase();
+    return (!q || hay.includes(q)) && (!ft || x.type===ft) && (!fc || x.color===fc);
+  });
+
+  let list = selectedInventorySize
+    ? baseList.filter(x=>x.size===selectedInventorySize)
+    : baseList;
+
+  document.getElementById('counts').innerHTML = `
+    <div class="count"><b>${items.length}</b><span>総数</span></div>`;
+
+  const isSearching = !!(q || ft || fc);
+  const sizeStockCard = document.getElementById('sizeStockCard');
+
+  if(sizeStockCard){
+    sizeStockCard.style.display = isSearching ? 'block' : 'none';
+  }
+
+  const sizes = ['SS','S','M','L','LL','3L'];
+  document.getElementById('sizeStockCounts').innerHTML = sizes.map(size=>{
+    const count = baseList.filter(x=>x.size===size).length;
+    const selectedClass = selectedInventorySize===size ? ' selectedSize' : '';
+    return `<button type="button" class="sizeCount${selectedClass}" onclick="selectInventorySize('${size}')"><b>${count}</b><span>${size}</span></button>`;
+  }).join('');
+
+  const note = document.getElementById('selectedSizeNote');
+  if(note){
+    note.style.display = selectedInventorySize ? 'block' : 'none';
+    note.textContent = selectedInventorySize ? `${selectedInventorySize}サイズの検索結果です。もう一度サイズを押すと非表示にできます。` : '';
+  }
+
+  const box = document.getElementById('itemList');
+
+  if(!selectedInventorySize){
+    box.innerHTML = isSearching
+      ? '<div class="empty">サイズをタップすると検索結果が表示されます</div>'
+      : '';
+    return;
+  }
+
+  if(!list.length){box.innerHTML='<div class="card empty">該当する袴がありません</div>';return}
+
+  list = sortItemsByCode(list);
+
+  box.innerHTML = list.map(x=>`
+    <div class="item">
+      <h3>${escapeHtml(x.code)}</h3>
+      <div class="meta">
+        種類・色：${escapeHtml(x.type)} ／ ${escapeHtml(x.color)}<br>
+        サイズ：${escapeHtml(x.size||'-')}<br>
+        元サイズ：${escapeHtml(x.originalSize||'-')}<br>
+        ${reservationInfoHtml(x.code)}
+        ${(x.checks||[]).length ? (x.checks||[]).map(c=>`<span class="pill">${escapeHtml(c)}</span>`).join('') + '<br>' : ''}
+        ${x.memo ? 'メモ：'+escapeHtml(x.memo) : ''}
+      </div>
+      <div class="miniActions">
+        <button class="btn-sub" onclick="editItem('${x.id}')">編集</button>
+        <button type="button" class="btn-danger deleteBigBtn" onclick="openDeleteItemModal('${x.id}')">削除</button>
+      </div>
+    </div>`).join('');
+}
+
+
+let pendingDeleteItemId = null;
+
+function openDeleteItemModal(id){
+  const item = items.find(x => String(x.id) === String(id));
+  if(!item){
+    alert('削除対象が見つかりません。');
+    return;
+  }
+
+  pendingDeleteItemId = String(id);
+
+  const detail = `
+    <strong>${escapeHtml(item.type || '-')} ／ ${escapeHtml(item.color || '-')}</strong><br>
+    サイズ：${escapeHtml(item.size || '-')}<br>
+    商品番号：${escapeHtml(item.code || '-')}
+  `;
+
+  document.getElementById('deleteModalText').innerHTML = detail;
+  document.getElementById('deleteModal').classList.remove('hiddenModal');
+}
+
+function closeDeleteItemModal(){
+  pendingDeleteItemId = null;
+  document.getElementById('deleteModal').classList.add('hiddenModal');
+}
+
+function confirmDeleteItem(){
+  if(!pendingDeleteItemId){
+    closeDeleteItemModal();
+    return;
+  }
+
+  const id = pendingDeleteItemId;
+  items = items.filter(x => String(x.id) !== String(id));
+  localStorage.setItem('hakama_items', JSON.stringify(items));
+
+  closeDeleteItemModal();
+
+  renderReserveOptions();
+  updateInventoryColorFilter();
+  updateAvailableColorFilter();
+  renderAvailableStock();
+  renderItems();
+}
+
+function editItem(id){
+  const x = items.find(i=>i.id===id); if(!x)return;
+  editingId=id;
+  document.getElementById('code').value=x.code||'';
+  document.getElementById('type').value=x.type||'無地';
+  updateColorOptions(x.color||'');
+  document.getElementById('size').value=x.size||'SS';
+  document.getElementById('originalSize').value=x.originalSize||'';
+  document.getElementById('memo').value=x.memo||'';
+  setChecks(x.checks||[]);
+  document.getElementById('formTitle').textContent='袴を修正中';
+  document.getElementById('formCard').classList.add('editMode');
+  showTab('add');
+}
+
+
+function getDefaultMarchDate(){
+  return '2027-03-01';
+}
+
+function setDefaultUseDateToMarch(){
+  const useDate = document.getElementById('useDate');
+  if(!useDate) return;
+
+  useDate.value = getDefaultMarchDate();
+  handleUseDateChange();
+}
+
+
+
+function setDefaultAvailableUseDateToMarch(){
+  const input = document.getElementById('availableUseDate');
+  if(!input) return;
+
+  if(!input.value){
+    input.value = getDefaultMarchDate();
+  }
+}
+
+
+function setDefaultPickupDateToMarch(){
+  const pickupDate = document.getElementById('pickupDate');
+  if(!pickupDate) return;
+
+  pickupDate.value = getDefaultMarchDate();
+}
+
+
+
+function prepareMarchCalendar(input){
+  if(!input) return;
+
+  // 値が入っていない日付欄は、3月1日を入れてから開く
+  // これでiPhone/スマホの標準カレンダーが3月から開きやすくなる
+  if(!input.value){
+    input.value = getDefaultMarchDate();
+  }
+}
+
+
+function setMarchDefaultsForDateInputs(){
+  const march = getDefaultMarchDate();
+
+  const available = document.getElementById('availableUseDate');
+  if(available && !available.value){
+    available.value = march;
+  }
+
+  const use = document.getElementById('useDate');
+  if(use && !use.value){
+    use.value = march;
+  }
+
+  const pickup = document.getElementById('pickupDate');
+  if(pickup && !pickup.value){
+    pickup.value = march;
+  }
+
+  const ret = document.getElementById('returnDate');
+  if(ret && !ret.value){
+    ret.value = addDays(march, 3);
+  }
+}
+
+
+
+
+
+
+
+function applyMarchDefaults(){
+  const march = getDefaultMarchDate();
+  const fields = ['availableUseDate','useDate','pickupDate'];
+  fields.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.value = march;
+      el.defaultValue = march;
+      el.setAttribute('value', march);
+    }
+  });
+
+  const ret = document.getElementById('returnDate');
+  if(ret){
+    ret.value = '2027-03-04';
+    ret.defaultValue = '2027-03-04';
+    ret.setAttribute('value', '2027-03-04');
+  }
+
+  if(typeof renderAvailableStock === 'function') renderAvailableStock();
+}
+
+function lockMarchDefaultsOnLoad(){
+  // iPhone/Safariの自動補正後にも勝つため、少し時間差で複数回セット
+  applyMarchDefaults();
+  setTimeout(applyMarchDefaults, 100);
+  setTimeout(applyMarchDefaults, 300);
+  setTimeout(applyMarchDefaults, 700);
+}
+
+function handleUseDateChange(){
+  const useDate = document.getElementById('useDate').value;
+
+  if(useDate){
+    const d = new Date(useDate);
+    d.setDate(d.getDate() + 3);
+
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+
+    document.getElementById('returnDate').value = `${yyyy}-${mm}-${dd}`;
+  }
+
+  checkConflict();
+}
+
+function getReservationPeriodFromForm(){
+  const useDate = val('useDate');
+  const pickupDate = val('pickupDate') || useDate;
+  const returnDate = val('returnDate') || addDays(useDate, 3);
+
+  return {
+    start: addDays(pickupDate, -1),
+    end: returnDate
+  };
+}
+
+function getReservationPeriod(r){
+  const useDate = r.useDate;
+  const pickupDate = r.pickupDate || useDate;
+  const returnDate = r.returnDate || addDays(useDate, 3);
+
+  return {
+    start: addDays(pickupDate, -1),
+    end: returnDate
+  };
+}
+
+function checkConflict(){
+  const code = val('reserveCode').trim();
+  const useDate = val('useDate');
+
+  if(!code || !useDate){
+    document.getElementById('conflictMsg').innerHTML='';
+    return false;
+  }
+
+  const item = items.find(x=>x.code===code);
+  if(!item){
+    msg('conflictMsg','この商品番号はまだ袴登録されていません','bad');
+    return true;
+  }
+
+  const target = getReservationPeriodFromForm();
+
+  const conflict = reservations.find(r=>{
+    if(r.id === editingReservationId) return false;
+    if(r.code !== code) return false;
+
+    const reserved = getReservationPeriod(r);
+    return dateRangesOverlap(target.start, target.end, reserved.start, reserved.end);
+  });
+
+  if(conflict){
+    const reserved = getReservationPeriod(conflict);
+    msg(
+      'conflictMsg',
+      `重複あり：${escapeHtml(conflict.customer || '-')}様の予約期間 ${reserved.start}〜${reserved.end} と重なっています`,
+      'bad'
+    );
+    return true;
+  }
+
+  msg('conflictMsg','重複なし：予約できます','good');
+  return false;
+}
+
+function saveReservation(){
+  const customer = val('customer').trim();
+  const code = val('reserveCode').trim();
+  const useDate = val('useDate');
+  if(!customer || !code || !useDate){msg('conflictMsg','お客様名・使用日・商品番号を入力してください','bad');return}
+  if(checkConflict()) return;
+
+  const data = {
+    id: editingReservationId || uid(),
+    customer,
+    code,
+    useDate,
+    store:val('reserveStore'),
+    pickupDate:val('pickupDate'),
+    returnDate:val('returnDate'),
+    memo:val('reserveMemo')
+  };
+
+  const wasEditing = !!editingReservationId;
+
+  if(wasEditing){
+    reservations = reservations.map(r => r.id === editingReservationId ? data : r);
+  }else{
+    reservations.unshift(data);
+  }
+
+  persist();
+  clearReservation();
+  resetReservationEditMode();
+
+  if(wasEditing){
+    msg('conflictMsg','予約を修正しました','good');
+  }else{
+    msg('conflictMsg','予約を保存しました','good');
+  }
+
+  renderAvailableStock();
+  renderReservations();
+  renderItems();
+}
+function clearReservation(){
+  editingReservationId = null;
+
+  const title = document.getElementById('reservationFormTitle');
+  if(title) title.textContent='予約登録';
+
+  ['customer','reserveMemo'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+
+  const reserveCode = document.getElementById('reserveCode');
+  if(reserveCode) reserveCode.value='';
+
+  const store = document.getElementById('reserveStore');
+  if(store) store.value='本店';
+
+  const march = getDefaultMarchDate();
+
+  const useDate = document.getElementById('useDate');
+  if(useDate) useDate.value = march;
+
+  const pickupDate = document.getElementById('pickupDate');
+  if(pickupDate) pickupDate.value = march;
+
+  const returnDate = document.getElementById('returnDate');
+  if(returnDate) returnDate.value = addDays(march, 3);
+
+  const conflict = document.getElementById('conflictMsg');
+  if(conflict) conflict.innerHTML='';
+}
+
+function renderReservations(){
+  const box = document.getElementById('reservationList');
+  if(!reservations.length){box.innerHTML='<div class="empty">予約はまだありません</div>';return}
+  box.innerHTML = reservations.map(r=>`
+    <div class="item">
+      <h3>${escapeHtml(r.customer)} 様</h3>
+      <div class="meta">
+        店舗:${escapeHtml(r.store||'-')}<br>
+        使用日:${escapeHtml(r.useDate)}／商品番号:${escapeHtml(r.code)}<br>
+        受渡し:${escapeHtml(r.pickupDate||'-')}　返却:${escapeHtml(r.returnDate||'-')}<br>
+        ${r.memo ? escapeHtml(r.memo) : ''}
+      </div>
+      <div class="miniActions">
+        <button class="btn-sub" onclick="editReservation('${r.id}')">編集</button>
+        <button class="btn-sub" onclick="copyCode('${r.code}')">商品検索</button>
+        <button type="button" class="btn-danger deleteBigBtn" onclick="openDeleteReservationModal('${r.id}')">削除</button>
+      </div>
+    </div>`).join('');
+}
+
+function editReservation(id){
+  const r = reservations.find(x=>x.id===id);
+  if(!r) return;
+
+  editingReservationId = id;
+
+  showTab('reserve');
+
+  const title = document.getElementById('reservationFormTitle');
+  if(title) title.textContent='予約を修正中';
+
+  const item = items.find(x=>x.code===r.code);
+
+  if(item){
+    const typeFilter = document.getElementById('reserveFilterType');
+    const colorFilter = document.getElementById('reserveFilterColor');
+
+    if(typeFilter) typeFilter.value = item.type || '';
+    renderReserveOptions();
+
+    if(colorFilter) colorFilter.value = item.color || '';
+    renderReserveOptions();
+  }else{
+    renderReserveOptions();
+  }
+
+  const customer = document.getElementById('customer');
+  if(customer) customer.value = r.customer || '';
+
+  const store = document.getElementById('reserveStore');
+  if(store) store.value = r.store || '本店';
+
+  const useDate = document.getElementById('useDate');
+  if(useDate) useDate.value = r.useDate || '';
+
+  const pickupDate = document.getElementById('pickupDate');
+  if(pickupDate) pickupDate.value = r.pickupDate || '';
+
+  const returnDate = document.getElementById('returnDate');
+  if(returnDate) returnDate.value = r.returnDate || '';
+
+  const memo = document.getElementById('reserveMemo');
+  if(memo) memo.value = r.memo || '';
+
+  const reserveCode = document.getElementById('reserveCode');
+  if(reserveCode) reserveCode.value = r.code || '';
+
+  checkConflict();
+
+  setTimeout(()=>{
+    const title2 = document.getElementById('reservationFormTitle');
+    if(title2) title2.textContent='予約を修正中';
+
+    const customer2 = document.getElementById('customer');
+    if(customer2) customer2.value = r.customer || '';
+
+    const reserveCode2 = document.getElementById('reserveCode');
+    if(reserveCode2) reserveCode2.value = r.code || '';
+
+    checkConflict();
+  }, 80);
+}
+
+
+function copyCode(code){
+  showTab('home');
+  document.getElementById('q').value=code;
+  renderItems();
+}
+
+let pendingDeleteReservationId = null;
+
+function openDeleteReservationModal(id){
+  const r = reservations.find(x => String(x.id) === String(id));
+  if(!r){
+    alert('削除対象の予約が見つかりません。');
+    return;
+  }
+
+  pendingDeleteReservationId = String(id);
+
+  const detail = `
+    <strong>${escapeHtml(r.customer || '-')} 様</strong><br>
+    店舗：${escapeHtml(r.store || '-')}<br>
+    商品番号：${escapeHtml(r.code || '-')}<br>
+    使用日：${escapeHtml(r.useDate || '-')}<br>
+    受渡し：${escapeHtml(r.pickupDate || '-')}<br>
+    返却：${escapeHtml(r.returnDate || '-')}
+  `;
+
+  document.getElementById('deleteReservationModalText').innerHTML = detail;
+  document.getElementById('deleteReservationModal').classList.remove('hiddenModal');
+}
+
+function closeDeleteReservationModal(){
+  pendingDeleteReservationId = null;
+  document.getElementById('deleteReservationModal').classList.add('hiddenModal');
+}
+
+function confirmDeleteReservation(){
+  if(!pendingDeleteReservationId){
+    closeDeleteReservationModal();
+    return;
+  }
+
+  const id = pendingDeleteReservationId;
+  reservations = reservations.filter(x => String(x.id) !== String(id));
+  localStorage.setItem('hakama_reservations', JSON.stringify(reservations));
+
+  closeDeleteReservationModal();
+
+  renderAvailableStock();
+  renderReservations();
+  renderItems();
+}
+
+function exportData(){
+  const data = JSON.stringify({items,reservations}, null, 2);
+  navigator.clipboard?.writeText(data);
+  document.getElementById('importText').value=data;
+  msg('settingMsg','バックアップ文字を作成しました。コピーして保管してください。','good');
+}
+function importData(){
+  try{
+    const data = JSON.parse(document.getElementById('importText').value);
+    items = data.items || [];
+    reservations = data.reservations || [];
+    persist(); renderReserveOptions(); updateAvailableColorFilter(); renderAvailableStock(); renderItems(); renderReservations();
+    msg('settingMsg','復元しました','good');
+  }catch(e){msg('settingMsg','復元できません。バックアップ文字を確認してください。','bad')}
+}
+
+
+
+function autoRenumberAllItemCodesOnce(){
+  const autoKey = 'auto_renumber_type_color_size_v2';
+
+  // H-形式や旧形式が残っている場合のみ再実行
+  const needsRenumber = items.some(item=>{
+    const code = String(item.code || '');
+    return code.startsWith('H-') || !code.match(/.+-.+/);
+  });
+
+  if(localStorage.getItem(autoKey) === 'done' && !needsRenumber){
+    return;
+  }
+
+  const counters = {};
+  const codeMap = {};
+
+  items = items.map(item=>{
+    const prefix = getCodePrefix(item.type, item.color, item.size);
+    counters[prefix] = (counters[prefix] || 0) + 1;
+
+    const newCode = `${prefix}-${String(counters[prefix]).padStart(3,'0')}`;
+
+    if(item.code && item.code !== newCode){
+      codeMap[item.code] = newCode;
+    }
+
+    return {
+      ...item,
+      code:newCode
+    };
+  });
+
+  reservations = reservations.map(r=>{
+    if(codeMap[r.code]){
+      return {
+        ...r,
+        code:codeMap[r.code]
+      };
+    }
+    return r;
+  });
+
+  persist();
+  localStorage.setItem(autoKey, 'done');
+}
+
+
+
+
+
+
+
+function syncAllInventoryToMasterData(){
+  rebuildInventoryToMaster256();
+}
+
+
+function normalizeRequestedMujiStock(){
+  const targetMap = {
+    '無地|紺|S':1,
+    '無地|紺|M':4,
+    '無地|紺|L':4,
+    '無地|紺|LL':3,
+
+    '無地|緑|S':1,
+    '無地|緑|M':2,
+    '無地|緑|L':5,
+    '無地|緑|LL':2,
+
+    '無地|えんじ|S':5,
+    '無地|えんじ|M':4,
+    '無地|えんじ|L':1,
+    '無地|えんじ|LL':1,
+    '無地|えんじ|3L':1,
+
+    '無地|紫|SS':1,
+    '無地|紫|S':4,
+    '無地|紫|M':5,
+    '無地|紫|L':4,
+    '無地|紫|LL':2,
+    '無地|紫|3L':1
+  };
+
+  Object.entries(targetMap).forEach(([key, targetCount])=>{
+    const [type,color,size] = key.split('|');
+
+    let matched = items
+      .filter(x=>x.type===type && x.color===color && x.size===size)
+      .sort((a,b)=>String(a.code||'').localeCompare(String(b.code||''),'ja'));
+
+    while(matched.length > targetCount){
+      const removeItem = matched.pop();
+      const idx = items.findIndex(x=>x.id===removeItem.id);
+      if(idx !== -1){
+        items.splice(idx,1);
+      }
+    }
+
+    while(matched.length < targetCount){
+      const code = generateCode(type,color,size);
+
+      const item = {
+        id: uid(),
+        code,
+        type,
+        color,
+        size,
+        originalSize:'',
+        checks:[],
+        memo:'',
+        updatedAt:new Date().toISOString()
+      };
+
+      items.push(item);
+      matched.push(item);
+    }
+  });
+
+  persist();
+}
+
+function cleanupDuplicateMujiStockOnce(){
+  const cleanupKey = 'cleanup_duplicate_muji_stock_v1';
+  if(localStorage.getItem(cleanupKey) === 'done') return;
+
+  const targets = [
+    {type:'無地', color:'紺', counts:{S:1,M:4,L:4,LL:3}},
+    {type:'無地', color:'緑', counts:{S:1,M:2,L:5,LL:2}},
+    {type:'無地', color:'えんじ', counts:{S:5,M:4,L:1,LL:1,'3L':1}},
+    {type:'無地', color:'紫', counts:{SS:1,S:4,M:5,L:4,LL:2,'3L':1}}
+  ];
+
+  targets.forEach(t=>{
+    Object.entries(t.counts).forEach(([size, keepCount])=>{
+      const matched = items
+        .filter(x=>x.type===t.type && x.color===t.color && x.size===size)
+        .sort((a,b)=>String(a.code||'').localeCompare(String(b.code||''),'ja'));
+
+      if(matched.length > keepCount){
+        const removeList = matched.slice(keepCount);
+        removeList.forEach(r=>{
+          const idx = items.findIndex(x=>x.id===r.id);
+          if(idx !== -1){
+            items.splice(idx,1);
+          }
+        });
+      }
+    });
+  });
+
+  persist();
+  localStorage.setItem(cleanupKey, 'done');
+}
+
+function addRequestedMujiStockOnce(){
+  const seedKey = 'seed_requested_hl_stock_v2';
+  if(localStorage.getItem(seedKey) === 'done') return;
+
+  const stockData = [
+    {type:'無地', color:'紺', counts:{S:1, M:4, L:4, LL:3}},
+    {type:'無地', color:'緑', counts:{S:1, M:2, L:5, LL:2}},
+    {type:'無地', color:'えんじ', counts:{S:5, M:4, L:1, LL:1, '3L':1}},
+    {type:'無地', color:'紫', counts:{SS:1, S:4, M:5, L:4, LL:2, '3L':1}},
+
+    {type:'HL', color:'A(紫)', counts:{SS:1, S:3, M:1, L:2, LL:2}},
+    {type:'HL', color:'C(ピンク)', counts:{SS:1, S:4, M:3, L:2}},
+    {type:'HL', color:'D(赤)', counts:{S:2, M:5, L:2, LL:1, '3L':1}}
+  ];
+
+  stockData.forEach(group=>{
+    Object.entries(group.counts).forEach(([size, count])=>{
+      for(let i=0; i<count; i++){
+        const code = generateCode(group.type, group.color, size);
+        items.push({
+          id: uid(),
+          code,
+          type: group.type,
+          color: group.color,
+          size,
+          originalSize: '',
+          checks: [],
+          memo: '',
+          updatedAt: new Date().toISOString()
+        });
+      }
+    });
+  });
+
+  persist();
+  localStorage.setItem(seedKey, 'done');
+}
+
+
+function renumberAllItemCodes(){
+  const ok = confirm('全ての商品番号を「種類＋色＋サイズ＋連番」に付け直しますか？\n\n例：刺繍・黒・SS → 刺黒SS-001');
+  if(!ok) return;
+
+  const counters = {};
+
+  items = items.map(item=>{
+    const prefix = getCodePrefix(item.type, item.color, item.size);
+    counters[prefix] = (counters[prefix] || 0) + 1;
+    const newCode = `${prefix}-${String(counters[prefix]).padStart(3,'0')}`;
+    const oldCode = item.code;
+
+    reservations = reservations.map(r => r.code === oldCode ? {...r, code:newCode} : r);
+
+    return {...item, code:newCode};
+  });
+
+  persist();
+  renderReserveOptions();
+  updateInventoryColorFilter();
+  updateAvailableColorFilter();
+  renderAvailableStock();
+  renderItems();
+  renderReservations();
+  updateAutoCode();
+
+  msg('settingMsg','商品番号を付け直しました。','good');
+}
+
+
+function addTestInventory(){
+  const required = [
+    ['SS',1],
+    ['S',3],
+    ['M',3],
+    ['L',6],
+    ['LL',2],
+    ['3L',3]
+  ];
+
+  let next = 1;
+  const nums = items.map(x=>{
+    const m = String(x.code || '').match(/H-(\d+)/);
+    return m ? parseInt(m[1]) : 0;
+  });
+  next = Math.max(0, ...nums) + 1;
+
+  required.forEach(([size, count])=>{
+    for(let i=0; i<count; i++){
+      items.push({
+        id: uid(),
+        code: `H-${String(next).padStart(3,'0')}`,
+        type: '刺繍',
+        color: '緑',
+        size,
+        originalSize: '',
+        checks: [],
+        memo: '',
+        updatedAt: new Date().toISOString()
+      });
+      next++;
+    }
+  });
+
+  persist();
+  renderReserveOptions();
+  updateInventoryColorFilter();
+  updateAvailableColorFilter();
+  renderAvailableStock();
+  renderItems();
+  msg('settingMsg','テスト在庫を追加しました。','good');
+}
+
+
+
+function forceRestoreMujiBlackS001(){
+  // 無黒S-001を必ず1点作る
+  let item = items.find(x => String(x.code) === '無黒S-001');
+
+  if(!item){
+    items.push({
+      id: uid(),
+      code: '無黒S-001',
+      type: '無地',
+      color: '黒',
+      size: 'S',
+      originalSize: '',
+      checks: [],
+      memo: '復活分',
+      updatedAt: new Date().toISOString()
+    });
+  }else{
+    item.type = '無地';
+    item.color = '黒';
+    item.size = 'S';
+    item.code = '無黒S-001';
+    item.memo = item.memo || '復活分';
+  }
+
+  persist();
+}
+
+
+
+let firebaseDb = null;
+let firebaseUnsubscribe = null;
+let isApplyingFirebaseData = false;
+
+function getFirebaseConfig(){
+  const raw = localStorage.getItem('hakama_firebase_config') || '';
+  if(!raw) return null;
+  try{return JSON.parse(raw);}catch(e){return null;}
+}
+function getFirebaseStoreId(){
+  return localStorage.getItem('hakama_firebase_store_id') || 'legend_hakama';
+}
+function initFirebaseSettingsUI(){
+  const configInput = document.getElementById('firebaseConfigText');
+  const storeInput = document.getElementById('firebaseStoreId');
+  if(configInput) configInput.value = localStorage.getItem('hakama_firebase_config') || '';
+  if(storeInput) storeInput.value = getFirebaseStoreId();
+}
+function initFirebase(){
+  const config = getFirebaseConfig();
+  if(!config){ msg('settingMsg','Firebase設定が未入力です。','bad'); return null; }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(config);
+    firebaseDb = firebase.firestore();
+    return firebaseDb;
+  }catch(err){
+    console.error(err);
+    msg('settingMsg','Firebase初期化に失敗しました。設定を確認してください。','bad');
+    return null;
+  }
+}
+function saveFirebaseSettings(){
+  const configText = (document.getElementById('firebaseConfigText')?.value || '').trim();
+  const storeId = (document.getElementById('firebaseStoreId')?.value || 'legend_hakama').trim();
+  if(!configText){ msg('settingMsg','firebaseConfigを貼り付けてください。','bad'); return; }
+  try{ JSON.parse(configText); }catch(e){ msg('settingMsg','firebaseConfigのJSON形式が正しくありません。','bad'); return; }
+  localStorage.setItem('hakama_firebase_config', configText);
+  localStorage.setItem('hakama_firebase_store_id', storeId || 'legend_hakama');
+  if(initFirebase()) msg('settingMsg','Firebase設定を保存しました。','good');
+}
+function firebaseDocRef(){
+  const db = firebaseDb || initFirebase();
+  if(!db) return null;
+  return db.collection('hakamaStores').doc(getFirebaseStoreId());
+}
+async function saveToFirebase(){
+  const ref = firebaseDocRef();
+  if(!ref) return;
+  try{
+    await ref.set({items, reservations, updatedAt:new Date().toISOString()}, {merge:true});
+    msg('settingMsg',`Firebaseへ保存しました。在庫${items.length}件 / 予約${reservations.length}件`,'good');
+  }catch(err){
+    console.error(err);
+    msg('settingMsg','Firebaseへ保存できませんでした。Firestoreルールを確認してください。','bad');
+  }
+}
+async function loadFromFirebase(){
+  const ref = firebaseDocRef();
+  if(!ref) return;
+  if(!confirm('Firebaseの内容で、この端末のデータを上書きしますか？')) return;
+  try{
+    const snap = await ref.get();
+    if(!snap.exists){ msg('settingMsg','Firebase上にデータがありません。先に保存してください。','bad'); return; }
+    const data = snap.data() || {};
+    isApplyingFirebaseData = true;
+    items = data.items || [];
+    reservations = data.reservations || [];
+    persist();
+    renderItems(); renderReservations(); renderAvailableStock(); renderSizeAvailableSearch();
+    isApplyingFirebaseData = false;
+    msg('settingMsg',`Firebaseから読込しました。在庫${items.length}件 / 予約${reservations.length}件`,'good');
+  }catch(err){
+    isApplyingFirebaseData = false;
+    console.error(err);
+    msg('settingMsg','Firebaseから読込できませんでした。','bad');
+  }
+}
+function startFirebaseRealtimeSync(){
+  const ref = firebaseDocRef();
+  if(!ref) return;
+  if(firebaseUnsubscribe) firebaseUnsubscribe();
+  firebaseUnsubscribe = ref.onSnapshot(snap=>{
+    if(!snap.exists || isApplyingFirebaseData) return;
+    const data = snap.data() || {};
+    items = data.items || [];
+    reservations = data.reservations || [];
+    persist();
+    renderItems(); renderReservations(); renderAvailableStock(); renderSizeAvailableSearch();
+    msg('settingMsg',`リアルタイム同期中：在庫${items.length}件 / 予約${reservations.length}件`,'good');
+  }, err=>{
+    console.error(err);
+    msg('settingMsg','リアルタイム同期に失敗しました。','bad');
+  });
+  msg('settingMsg','リアルタイム同期を開始しました。','good');
+}
+
+function resetAll(){
+  if(!confirm('全データを削除しますか？'))return;
+  items=[]; reservations=[]; persist(); renderItems(); renderReservations();
+}
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
+}
+
+updateColorOptions();
+clearForm();
+// disabled old auto stock: // disabled // disabled old stock call;
+renderReserveOptions();
+updateInventoryColorFilter();
+updateAvailableColorFilter();
+renderAvailableStock();
+// disabled old auto stock: // disabled // disabled old stock call;
+renderItems();
+syncAllInventoryToMasterData();
+renderReserveOptions();
+updateInventoryColorFilter();
+updateAvailableColorFilter();
+renderAvailableStock();
+renderSizeAvailableSearch();
+renderItems();
+renderReservations();
+
+document.addEventListener('DOMContentLoaded', function(){
+  initFirebaseSettingsUI();
+  ['availableUseDate','useDate','pickupDate'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.value = '2027-03-01';
+      el.defaultValue = '2027-03-01';
+      el.setAttribute('value','2027-03-01');
+    }
+  });
+  const ret = document.getElementById('returnDate');
+  if(ret){
+    ret.value = '2027-03-04';
+    ret.defaultValue = '2027-03-04';
+    ret.setAttribute('value','2027-03-04');
+  }
+});
+
+
+
+
+setTimeout(()=>{ syncAllInventoryToMasterData(); renderItems(); renderAvailableStock(); renderSizeAvailableSearch(); }, 300);
+</script>
+
+</body>
+</html>
